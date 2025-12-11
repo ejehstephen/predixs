@@ -1,0 +1,80 @@
+-- Atomic LMSR Buy Function (Postgres)
+-- Performs: check balance -> compute shares -> update positions -> update market shares & prices -> deduct wallet -> log trade
+
+create or replace function buy_shares_atomic(
+    p_user_id uuid,
+    p_market_id uuid,
+    p_side varchar,      -- 'yes' or 'no'
+    p_amount_paid numeric
+)
+returns jsonb as $$
+declare
+    user_wallet numeric;
+    market_record record;
+    q_yes numeric;
+    q_no numeric;
+    b_param numeric;
+    shares numeric;
+    new_q_yes numeric;
+    new_q_no numeric;
+    new_yes_price numeric;
+    new_no_price numeric;
+    trade_id uuid;
+begin
+    -- Lock the wallet row and market row to prevent race conditions
+    select balance into user_wallet from wallets where user_id = p_user_id for update;
+    if user_wallet < p_amount_paid then
+        raise exception 'Insufficient balance';
+    end if;
+
+    select * into market_record from markets where id = p_market_id for update;
+    q_yes := coalesce(market_record.yes_shares,0);
+    q_no := coalesce(market_record.no_shares,0);
+    b_param := coalesce(market_record.b_param,1000);
+
+    -- Compute shares (simple numeric approximation for demo)
+    -- Replace with precise numeric solution if needed
+    if p_side = 'yes' then
+        shares := ln(exp((q_yes+1)/b_param)+exp(q_no/b_param)) - ln(exp(q_yes/b_param)+exp(q_no/b_param));
+        new_q_yes := q_yes + shares;
+        new_q_no := q_no;
+    else
+        shares := ln(exp(q_yes/b_param)+exp((q_no+1)/b_param)) - ln(exp(q_yes/b_param)+exp(q_no/b_param));
+        new_q_no := q_no + shares;
+        new_q_yes := q_yes;
+    end if;
+
+    -- Compute new prices
+    new_yes_price := exp(new_q_yes/b_param) / (exp(new_q_yes/b_param) + exp(new_q_no/b_param));
+    new_no_price := 1 - new_yes_price;
+
+    -- Insert trade
+    insert into trades(user_id, market_id, side, amount_paid, shares, price_at_trade, fee, created_at)
+    values (p_user_id, p_market_id, p_side, p_amount_paid, shares, (p_side='yes'?new_yes_price:new_no_price), p_amount_paid*0.01, now())
+    returning id into trade_id;
+
+    -- Update positions
+    if p_side='yes' then
+        perform upsert_position_add_yes(p_user_id, p_market_id, shares, p_amount_paid);
+    else
+        perform upsert_position_add_no(p_user_id, p_market_id, shares, p_amount_paid);
+    end if;
+
+    -- Update market
+    update markets set yes_shares = new_q_yes, no_shares = new_q_no, yes_price = new_yes_price, no_price = new_no_price
+    where id = p_market_id;
+
+    -- Update wallet
+    update wallets set balance = balance - p_amount_paid, updated_at = now() where user_id = p_user_id;
+
+    -- Insert transaction
+    insert into transactions(user_id, type, amount, reference, status, created_at)
+    values (p_user_id, 'buy', p_amount_paid*0.99, trade_id, 'completed', now());
+
+    -- Log liquidity event
+    insert into liquidity_events(market_id, type, details, created_at)
+    values (p_market_id, 'trade', json_build_object('trade_id',trade_id,'side',p_side,'shares',shares,'amount_paid',p_amount_paid), now());
+
+    return json_build_object('success',true,'trade_id',trade_id,'shares',shares,'new_yes_price',new_yes_price,'new_no_price',new_no_price);
+end;
+$$ language plpgsql;

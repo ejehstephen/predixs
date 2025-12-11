@@ -1,0 +1,56 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../domain/repositories/market_repository.dart';
+
+class MarketRepositoryImpl implements MarketRepository {
+  final SupabaseClient _client;
+
+  MarketRepositoryImpl(this._client);
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchMarkets() async {
+    try {
+      final List<dynamic> response = await _client
+          .from('markets')
+          .select()
+          .order('volume', ascending: false); // Show highest volume first
+      return response.cast<Map<String, dynamic>>();
+    } catch (e) {
+      throw Exception('Failed to fetch markets: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>?> fetchMarketById(String marketId) async {
+    try {
+      final response = await _client
+          .from('markets')
+          .select()
+          .eq('id', marketId)
+          .maybeSingle();
+      return response;
+    } catch (e) {
+      throw Exception('Failed to fetch market $marketId: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> placeTrade({
+    required String marketId,
+    required String outcome,
+    required double amount,
+  }) async {
+    try {
+      final response = await _client.rpc(
+        'buy_shares',
+        params: {
+          'p_market_id': marketId,
+          'p_outcome': outcome,
+          'p_amount': amount,
+        },
+      );
+      return response as Map<String, dynamic>;
+    } catch (e) {
+      throw Exception('Trade failed: $e');
+    }
+  }
+}

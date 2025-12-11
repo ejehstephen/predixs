@@ -1,0 +1,18 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../data/repositories/user_repository_impl.dart';
+import '../../../../domain/entities/notification.dart';
+import '../../../../domain/repositories/user_repository.dart';
+
+import '../../../../data/datasources/local_storage_service.dart';
+
+final userRepositoryProvider = Provider<UserRepository>((ref) {
+  final localStorage = ref.watch(localStorageServiceProvider);
+  return UserRepositoryImpl(Supabase.instance.client, localStorage);
+});
+
+final notificationsProvider =
+    FutureProvider.autoDispose<List<NotificationItem>>((ref) async {
+      final repo = ref.watch(userRepositoryProvider);
+      return await repo.fetchNotifications();
+    });
