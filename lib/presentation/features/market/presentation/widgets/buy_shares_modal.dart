@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../domain/entities/market.dart';
+import '../../../portfolio/providers/portfolio_providers.dart';
 import '../../../wallet/providers/wallet_providers.dart';
 import '../../providers/market_providers.dart';
 
@@ -55,15 +56,16 @@ class _BuySharesModalState extends ConsumerState<BuySharesModal> {
       // 1. Call API
       await repo.placeTrade(
         marketId: widget.market.id,
-        outcome: widget.isYes ? 'yes' : 'no',
+        outcome: widget.isYes ? 'Yes' : 'No',
         amount: amount,
       );
 
       // 2. Refresh Providers (Wallet Balance & Market Data)
       ref.invalidate(walletBalanceProvider);
+      ref.invalidate(walletTransactionsProvider);
       ref.invalidate(marketProvider(widget.market.id));
-      // Optionally invalidate market list if volume/price updates are critical there immediately
-      // ref.invalidate(marketListProvider);
+      ref.invalidate(portfolioPositionsProvider);
+      ref.invalidate(marketListProvider);
 
       if (mounted) {
         setState(() => _isLoading = false);

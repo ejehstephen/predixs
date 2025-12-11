@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:predixs/presentation/features/wallet/providers/wallet_providers.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../domain/entities/position.dart';
 import '../providers/portfolio_providers.dart';
@@ -36,133 +37,143 @@ class PortfolioScreen extends ConsumerWidget {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Portfolio Summary Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'Total Portfolio Value (Cash + Assets)',
-                    style: GoogleFonts.inter(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(walletBalanceProvider);
+          ref.invalidate(portfolioPositionsProvider);
+          return Future.delayed(const Duration(seconds: 1));
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // Portfolio Summary Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  totalValueAsync.when(
-                    data: (val) => Text(
-                      '₦${val.toStringAsFixed(2)}',
-                      style: GoogleFonts.outfit(
-                        color: AppColors.textPrimary,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Total Portfolio Value (Cash + Assets)',
+                      style: GoogleFonts.inter(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
                       ),
-                    ).animate().scale(),
-                    loading: () => const SizedBox(
-                      height: 48,
-                      child: Center(child: CircularProgressIndicator()),
                     ),
-                    error: (e, _) => Text(
-                      'Error',
-                      style: GoogleFonts.outfit(color: AppColors.error),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _SummaryItem(
-                          label: 'Invested',
-                          value: '₦${invested.toStringAsFixed(0)}',
+                    const SizedBox(height: 8),
+                    totalValueAsync.when(
+                      data: (val) => Text(
+                        '₦${val.toStringAsFixed(2)}',
+                        style: GoogleFonts.outfit(
+                          color: AppColors.textPrimary,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
                         ),
+                      ).animate().scale(),
+                      loading: () => const SizedBox(
+                        height: 48,
+                        child: Center(child: CircularProgressIndicator()),
                       ),
-                      Container(
-                        height: 40,
-                        width: 1,
-                        color: Colors.grey.shade200,
+                      error: (e, _) => Text(
+                        'Error',
+                        style: GoogleFonts.outfit(color: AppColors.error),
                       ),
-                      Expanded(
-                        child: _SummaryItem(
-                          label: 'Total P/L',
-                          value:
-                              '${pnl >= 0 ? '+' : ''}₦${pnl.toStringAsFixed(0)}',
-                          valueColor: pnl >= 0
-                              ? AppColors.success
-                              : AppColors.error,
-                          subValue: '${pnlPercent.toStringAsFixed(1)}%',
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _SummaryItem(
+                            label: 'Invested',
+                            value: '₦${invested.toStringAsFixed(0)}',
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Active Positions',
-                style: GoogleFonts.outfit(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                        Container(
+                          height: 40,
+                          width: 1,
+                          color: Colors.grey.shade200,
+                        ),
+                        Expanded(
+                          child: _SummaryItem(
+                            label: 'Total P/L',
+                            value:
+                                '${pnl >= 0 ? '+' : ''}₦${pnl.toStringAsFixed(0)}',
+                            valueColor: pnl >= 0
+                                ? AppColors.success
+                                : AppColors.error,
+                            subValue: '${pnlPercent.toStringAsFixed(1)}%',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
-            positionsAsync.when(
-              data: (positions) {
-                if (positions.isEmpty) {
-                  return Container(
-                    padding: const EdgeInsets.all(32),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'No active positions',
-                      style: GoogleFonts.inter(color: AppColors.textSecondary),
-                    ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Active Positions',
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              positionsAsync.when(
+                data: (positions) {
+                  if (positions.isEmpty) {
+                    return Container(
+                      padding: const EdgeInsets.all(32),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'No active positions',
+                        style: GoogleFonts.inter(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    );
+                  }
+                  return ListView.separated(
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: positions.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      final pos = positions[index];
+                      return _PositionCard(
+                        position: pos,
+                      ).animate().fadeIn(delay: (100 * index).ms).moveX();
+                    },
                   );
-                }
-                return ListView.separated(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: positions.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final pos = positions[index];
-                    return _PositionCard(
-                      position: pos,
-                    ).animate().fadeIn(delay: (100 * index).ms).moveX();
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, s) => Center(child: Text('Error: $e')),
-            ),
-          ],
-        ),
-      ),
-    );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, s) => Center(child: Text('Error: $e')),
+              ),
+            ],
+          ),
+        ), // SingleChildScrollView
+      ), // RefreshIndicator
+    ); // Scaffold
   }
 }
 

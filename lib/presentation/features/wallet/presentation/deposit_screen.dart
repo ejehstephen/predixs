@@ -1,10 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../providers/wallet_providers.dart';
 
-class DepositScreen extends StatelessWidget {
+class DepositScreen extends ConsumerStatefulWidget {
   const DepositScreen({super.key});
+
+  @override
+  ConsumerState<DepositScreen> createState() => _DepositScreenState();
+}
+
+class _DepositScreenState extends ConsumerState<DepositScreen> {
+  final _amountController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _handleDeposit() async {
+    final amount = double.tryParse(_amountController.text);
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid amount')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await ref.read(walletRepositoryProvider).deposit(amount);
+
+      // Refresh wallet data
+      ref.invalidate(walletBalanceProvider);
+      ref.invalidate(walletTransactionsProvider);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Deposit Successful!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +103,10 @@ class DepositScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   TextField(
-                    keyboardType: TextInputType.number,
+                    controller: _amountController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     style: GoogleFonts.outfit(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -62,13 +124,7 @@ class DepositScreen extends StatelessWidget {
             ),
             const Spacer(),
             ElevatedButton(
-              onPressed: () {
-                // Dummy Success
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Payment Successful (Dummy)')),
-                );
-                context.pop();
-              },
+              onPressed: _isLoading ? null : _handleDeposit,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.success,
                 foregroundColor: Colors.white,
@@ -76,14 +132,24 @@ class DepositScreen extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
+                disabledBackgroundColor: AppColors.success.withOpacity(0.5),
               ),
-              child: Text(
-                'Pay with Paystack',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'Confirm Deposit (Simulated)',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
           ],
         ),

@@ -37,15 +37,17 @@ class Market extends Equatable {
       title: json['title'] as String,
       description: json['description'] as String?,
       category: json['category'] as String,
-      endTime: DateTime.parse(json['end_time'] as String),
-      status: json['status'] as String? ?? 'open',
+      endTime:
+          DateTime.tryParse(json['end_date']?.toString() ?? '') ??
+          DateTime.now().add(const Duration(days: 1)),
+      status: (json['is_resolved'] as bool? ?? false) ? 'resolved' : 'open',
       yesPrice: (json['yes_price'] as num?)?.toDouble() ?? 0.5,
       noPrice: (json['no_price'] as num?)?.toDouble() ?? 0.5,
-      yesShares: (json['yes_shares'] as num?)?.toDouble() ?? 0.0,
-      noShares: (json['no_shares'] as num?)?.toDouble() ?? 0.0,
-      initialLiquidity: (json['initial_liquidity'] as num?)?.toDouble() ?? 0.0,
+      yesShares: 0.0, // Not tracked in markets table anymore
+      noShares: 0.0, // Not tracked in markets table anymore
+      initialLiquidity: 0.0,
       volume: (json['volume'] as num?)?.toDouble() ?? 0.0,
-      resolution: json['resolution'] as String?,
+      resolution: json['resolution_outcome'] as String?,
     );
   }
 

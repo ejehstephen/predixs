@@ -27,43 +27,26 @@ class PortfolioRepositoryImpl implements PortfolioRepository {
         final marketTitle = market['title'] ?? 'Unknown Market';
         final yesPrice = (market['yes_price'] as num).toDouble();
         final noPrice = (market['no_price'] as num).toDouble();
-        final avgPrice = (row['average_buy_price'] as num).toDouble();
 
-        final yesShares = (row['yes_shares'] as num).toDouble();
-        final noShares = (row['no_shares'] as num).toDouble();
+        // Parse DB columns
+        final side = row['side'] as String; // 'Yes' or 'No'
+        final shares = (row['shares'] as num).toDouble();
+        final avgPrice = (row['avg_price'] as num).toDouble();
 
-        // If user has YES shares
-        if (yesShares > 0) {
-          positions.add(
-            Position(
-              id: '${row['id']}_yes', // robust unique ID for UI
-              marketId: row['market_id'],
-              marketTitle: marketTitle,
-              side: 'Yes',
-              shares: yesShares,
-              avgPrice:
-                  avgPrice, // Note: Average price is aggregated in DB, implies mixed price if both sides held?
-              // In a simple LMSR/Orderbook, usually one doesn't hold both, but if they do, avg_price might be same or specialized.
-              // For MVP simpler to just use the row's avg.
-              currentPrice: yesPrice,
-            ),
-          );
-        }
+        if (shares <= 0) continue;
 
-        // If user has NO shares
-        if (noShares > 0) {
-          positions.add(
-            Position(
-              id: '${row['id']}_no',
-              marketId: row['market_id'],
-              marketTitle: marketTitle,
-              side: 'No',
-              shares: noShares,
-              avgPrice: avgPrice,
-              currentPrice: noPrice,
-            ),
-          );
-        }
+        positions.add(
+          Position(
+            id: row['id'],
+            marketId: row['market_id'],
+            marketTitle: marketTitle,
+            side: side,
+            shares: shares,
+            avgPrice: avgPrice,
+            // Determine current market price based on side held
+            currentPrice: side == 'Yes' ? yesPrice : noPrice,
+          ),
+        );
       }
 
       return positions;

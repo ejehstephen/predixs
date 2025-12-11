@@ -64,6 +64,7 @@ class WalletScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
+
                   balance.when(
                     data: (value) => Text(
                       '₦${value.toStringAsFixed(2)}',
@@ -76,11 +77,10 @@ class WalletScreen extends ConsumerWidget {
                     loading: () =>
                         const CircularProgressIndicator(color: Colors.white),
                     error: (e, s) => Text(
-                      '₦0.00',
-                      style: GoogleFonts.outfit(
+                      'Error: $e',
+                      style: GoogleFonts.inter(
                         color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
                     ),
                   ),
