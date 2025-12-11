@@ -42,4 +42,22 @@ class WalletRepositoryImpl implements WalletRepository {
       throw Exception('Failed to fetch transactions: $e');
     }
   }
+
+  @override
+  Future<void> deposit(double amount) async {
+    try {
+      await _client.rpc('deposit_funds', params: {'p_amount': amount});
+    } catch (e) {
+      throw Exception('Failed to deposit: $e');
+    }
+  }
+
+  @override
+  Future<void> withdraw(double amount) async {
+    try {
+      await _client.rpc('withdraw_funds', params: {'p_amount': amount});
+    } catch (e) {
+      throw Exception('Failed to withdraw: $e');
+    }
+  }
 }

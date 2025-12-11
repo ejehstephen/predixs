@@ -89,7 +89,8 @@ class WalletScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => context.push('/deposit'),
+                          onPressed: () =>
+                              _handleTransaction(context, ref, isDeposit: true),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: AppColors.primary,
@@ -105,7 +106,11 @@ class WalletScreen extends ConsumerWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => context.push('/withdraw'),
+                          onPressed: () => _handleTransaction(
+                            context,
+                            ref,
+                            isDeposit: false,
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white24,
                             foregroundColor: Colors.white,
@@ -243,11 +248,91 @@ class WalletScreen extends ConsumerWidget {
                   },
                 );
               },
+
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, s) => Center(child: Text('Error: $e')),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _handleTransaction(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool isDeposit,
+  }) async {
+    final amount = await _showAmountDialog(context, isDeposit: isDeposit);
+    if (amount == null) return;
+
+    try {
+      if (isDeposit) {
+        await ref.read(walletRepositoryProvider).deposit(amount);
+      } else {
+        await ref.read(walletRepositoryProvider).withdraw(amount);
+      }
+
+      // Refresh data
+      ref.invalidate(walletBalanceProvider);
+      ref.invalidate(walletTransactionsProvider);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${isDeposit ? "Deposit" : "Withdrawal"} successful!',
+            ),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<double?> _showAmountDialog(
+    BuildContext context, {
+    required bool isDeposit,
+  }) {
+    final controller = TextEditingController();
+    return showDialog<double>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isDeposit ? 'Deposit Funds' : 'Withdraw Funds'),
+        content: TextField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: 'Amount (₦)',
+            hintText: 'e.g. 5000',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final val = double.tryParse(controller.text);
+              if (val != null && val > 0) {
+                Navigator.pop(context, val);
+              }
+            },
+            child: Text(isDeposit ? 'Deposit' : 'Withdraw'),
+          ),
+        ],
       ),
     );
   }
