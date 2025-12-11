@@ -54,4 +54,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> signOut() async {
     await _supabaseClient.auth.signOut();
   }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _supabaseClient.auth.resetPasswordForEmail(email);
+  }
 }

@@ -116,4 +116,38 @@ class UserRepositoryImpl implements UserRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<void> updatePhoneAndVerify(String phone) async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return;
+
+      // Update Supabase
+      await _client
+          .from('profiles')
+          .update({
+            'phone': phone,
+            'kyc_level': 1, // Auto-verify
+          })
+          .eq('id', userId);
+
+      // Update Cache
+      final currentProfile = _localStorage.getProfile();
+      if (currentProfile != null) {
+        final updatedProfile = UserProfile(
+          id: currentProfile.id,
+          email: currentProfile.email,
+          fullName: currentProfile.fullName,
+          phone: phone, // New Phone
+          kycLevel: 1, // New Level
+          avatarUrl: currentProfile.avatarUrl,
+        );
+        await _localStorage.saveProfile(updatedProfile);
+      }
+    } catch (e) {
+      print('Error verifying phone: $e');
+      rethrow;
+    }
+  }
 }

@@ -18,4 +18,5 @@ abstract class AuthRepository {
   Future<void> signOut();
   User? get currentUser;
   Stream<AuthState> get authStateChanges;
+  Future<void> sendPasswordResetEmail(String email);
 }

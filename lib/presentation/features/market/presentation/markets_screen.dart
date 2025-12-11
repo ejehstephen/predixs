@@ -16,13 +16,11 @@ class MarketsScreen extends ConsumerStatefulWidget {
 
 class _MarketsScreenState extends ConsumerState<MarketsScreen> {
   String selectedCategory = 'All';
+  String _searchQuery = '';
   final categories = ['All', 'Sports', 'Crypto', 'Politics', 'Pop Culture'];
 
   @override
   Widget build(BuildContext context) {
-    // Categories defined for local state
-    // Market data is now fetched asynchronously in the body
-
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
@@ -43,6 +41,7 @@ class _MarketsScreenState extends ConsumerState<MarketsScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
+              onChanged: (value) => setState(() => _searchQuery = value),
               decoration: InputDecoration(
                 hintText: 'Search markets...',
                 prefixIcon: const Icon(Icons.search),
@@ -110,11 +109,15 @@ class _MarketsScreenState extends ConsumerState<MarketsScreen> {
                 .watch(marketListProvider)
                 .when(
                   data: (allMarkets) {
-                    final markets = selectedCategory == 'All'
-                        ? allMarkets
-                        : allMarkets
-                              .where((m) => m.category == selectedCategory)
-                              .toList();
+                    final markets = allMarkets.where((m) {
+                      final matchesCategory =
+                          selectedCategory == 'All' ||
+                          m.category == selectedCategory;
+                      final matchesSearch = m.title.toLowerCase().contains(
+                        _searchQuery.toLowerCase(),
+                      );
+                      return matchesCategory && matchesSearch;
+                    }).toList();
 
                     if (markets.isEmpty) {
                       return Center(

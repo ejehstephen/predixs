@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:gap/gap.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../providers/auth_providers.dart';
+import 'widgets/forgot_password_modal.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -149,6 +150,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   color: Colors.white,
                                 ),
                               ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => const ForgotPasswordModal(),
+                            );
+                          },
+                          child: Text(
+                            'Forgot Password?',
+                            style: GoogleFonts.inter(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
                       ),
                       const Gap(16),
                       TextButton(

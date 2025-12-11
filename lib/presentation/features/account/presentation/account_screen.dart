@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../providers/user_providers.dart';
+import 'widgets/verification_modal.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -125,16 +126,35 @@ class AccountScreen extends ConsumerWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
+                        color: (profile?.kycLevel ?? 0) >= 1
+                            ? AppColors.success.withOpacity(0.1)
+                            : Colors.grey.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text(
-                        'Verified Tier ${profile?.kycLevel ?? 0}',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.success,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if ((profile?.kycLevel ?? 0) >= 1) ...[
+                            const Icon(
+                              Icons.verified,
+                              size: 14,
+                              color: AppColors.success,
+                            ),
+                            const SizedBox(width: 4),
+                          ],
+                          Text(
+                            (profile?.kycLevel ?? 0) >= 1
+                                ? 'Verified'
+                                : 'Unverified',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: (profile?.kycLevel ?? 0) >= 1
+                                  ? AppColors.success
+                                  : Colors.grey,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -176,7 +196,14 @@ class AccountScreen extends ConsumerWidget {
                   _MenuOption(
                     icon: Icons.verified_user_outlined,
                     title: 'Verification (KYC)',
-                    onTap: () {},
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const VerificationModal(),
+                      );
+                    },
                   ),
                   const Divider(height: 1, indent: 60),
                   _MenuOption(

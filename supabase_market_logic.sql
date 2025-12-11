@@ -115,8 +115,9 @@ begin
   where id = v_wallet_id;
 
   -- 4. Record Transaction
-  insert into public.transactions (wallet_id, type, amount, status)
-  values (v_wallet_id, 'buy', -p_amount, 'completed');
+  -- 4. Record Transaction
+  insert into public.transactions (user_id, type, amount, status)
+  values (v_user_id, 'buy', -p_amount, 'completed');
 
   -- 5. Update/Create Position
   select id, shares, invested into v_existing_position_id, v_new_shares, v_total_invested
