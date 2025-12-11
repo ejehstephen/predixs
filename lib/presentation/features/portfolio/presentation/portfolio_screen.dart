@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:predixs/presentation/features/wallet/providers/wallet_providers.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../domain/entities/position.dart';
+import '../../market/presentation/widgets/sell_shares_modal.dart';
 import '../providers/portfolio_providers.dart';
 
 class PortfolioScreen extends ConsumerWidget {
@@ -311,6 +312,35 @@ class _PositionCard extends StatelessWidget {
                 ],
               ),
             ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => SellSharesModal(position: position),
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                side: const BorderSide(color: AppColors.error),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: Text(
+                'Sell Position',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ),
           ),
         ],
       ),

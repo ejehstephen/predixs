@@ -16,4 +16,16 @@ abstract class MarketRepository {
     required String outcome,
     required double amount,
   });
+
+  /// Sells shares in a market.
+  ///
+  /// [marketId] The ID of the market.
+  /// [outcome] 'Yes' or 'No'.
+  /// [shares] Number of shares to sell.
+  /// Returns a JSON object with success status and return amount.
+  Future<Map<String, dynamic>> sellShares({
+    required String marketId,
+    required String outcome,
+    required double shares,
+  });
 }

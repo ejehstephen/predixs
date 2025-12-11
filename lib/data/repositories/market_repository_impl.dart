@@ -53,4 +53,25 @@ class MarketRepositoryImpl implements MarketRepository {
       throw Exception('Trade failed: $e');
     }
   }
+
+  @override
+  Future<Map<String, dynamic>> sellShares({
+    required String marketId,
+    required String outcome,
+    required double shares,
+  }) async {
+    try {
+      final response = await _client.rpc(
+        'sell_shares',
+        params: {
+          'p_market_id': marketId,
+          'p_outcome': outcome,
+          'p_shares_to_sell': shares,
+        },
+      );
+      return response as Map<String, dynamic>;
+    } catch (e) {
+      throw Exception('Sell failed: $e');
+    }
+  }
 }
