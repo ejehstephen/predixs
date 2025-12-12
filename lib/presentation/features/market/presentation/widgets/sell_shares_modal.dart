@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:predixs/core/services/lmsr_service.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../domain/entities/position.dart';
 import '../../../portfolio/providers/portfolio_providers.dart';
@@ -31,16 +32,34 @@ class _SellSharesModalState extends ConsumerState<SellSharesModal> {
 
   void _updateEstimates() {
     final sharesToSell = double.tryParse(_amountController.text) ?? 0;
-    // Current price of the position's side
-    final price = widget.position.currentPrice;
 
-    // Simple estimate: Shares * Price
-    // Note: Actual return might be slightly lower due to price impact,
-    // but for UI estimate, current price is a good baseline.
-    // The backend handles exact impact.
-    setState(() {
-      _estimatedReturn = sharesToSell * price;
-    });
+    // Fetch market state for accurate LMSR calc
+    // We use ref.read because we are in a callback
+    final marketAsync = ref.read(marketProvider(widget.position.marketId));
+    final market = marketAsync.value;
+
+    if (market != null) {
+      // LMSR Estimate
+      final returnAmount = LmsrService.estimateSellReturn(
+        sharesToSell: sharesToSell,
+        currentYesShares: market.yesShares,
+        currentNoShares: market.noShares,
+        b: market.liquidityB,
+        isYesOutcome: widget.position.side == 'Yes', // 'Yes' or 'No'
+      );
+
+      setState(() {
+        _estimatedReturn = returnAmount;
+      });
+    } else {
+      // Fallback if market not loaded (should generally not happen if we came from portfolio -> detail)
+      // But if came from portfolio and market details not cached, we might need simple fallback
+      // For now, 0 or simple price * shares
+      setState(() {
+        // Simple fallback: Shares * Current Price (Approx)
+        _estimatedReturn = sharesToSell * widget.position.currentPrice;
+      });
+    }
   }
 
   @override

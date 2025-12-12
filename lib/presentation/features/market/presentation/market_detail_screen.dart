@@ -196,7 +196,7 @@ class MarketDetailScreen extends ConsumerWidget {
         ),
         _StatTile(
           label: 'Liquidity',
-          value: '₦${(market.initialLiquidity / 1000).toStringAsFixed(1)}k',
+          value: 'B: ${market.liquidityB.toStringAsFixed(0)}',
         ),
         _StatTile(
           label: 'End Date',

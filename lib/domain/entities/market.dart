@@ -11,7 +11,7 @@ class Market extends Equatable {
   final double noPrice;
   final double yesShares;
   final double noShares;
-  final double initialLiquidity;
+  final double liquidityB;
   final double volume;
   final String? resolution;
 
@@ -26,7 +26,7 @@ class Market extends Equatable {
     required this.noPrice,
     required this.yesShares,
     required this.noShares,
-    required this.initialLiquidity,
+    required this.liquidityB,
     required this.volume,
     this.resolution,
   });
@@ -43,9 +43,9 @@ class Market extends Equatable {
       status: (json['is_resolved'] as bool? ?? false) ? 'resolved' : 'open',
       yesPrice: (json['yes_price'] as num?)?.toDouble() ?? 0.5,
       noPrice: (json['no_price'] as num?)?.toDouble() ?? 0.5,
-      yesShares: 0.0, // Not tracked in markets table anymore
-      noShares: 0.0, // Not tracked in markets table anymore
-      initialLiquidity: 0.0,
+      yesShares: (json['yes_shares'] as num?)?.toDouble() ?? 0.0,
+      noShares: (json['no_shares'] as num?)?.toDouble() ?? 0.0,
+      liquidityB: (json['liquidity_b'] as num?)?.toDouble() ?? 100.0,
       volume: (json['volume'] as num?)?.toDouble() ?? 0.0,
       resolution: json['resolution_outcome'] as String?,
     );
@@ -63,7 +63,7 @@ class Market extends Equatable {
     noPrice,
     yesShares,
     noShares,
-    initialLiquidity,
+    liquidityB,
     volume,
     resolution,
   ];

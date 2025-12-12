@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../domain/entities/market.dart';
+import '../../../../../core/services/lmsr_service.dart';
 import '../../../portfolio/providers/portfolio_providers.dart';
 import '../../../wallet/providers/wallet_providers.dart';
 import '../../providers/market_providers.dart';
@@ -32,9 +33,16 @@ class _BuySharesModalState extends ConsumerState<BuySharesModal> {
 
   void _updateEstimates() {
     final amount = double.tryParse(_amountController.text) ?? 0;
-    final price = widget.isYes ? widget.market.yesPrice : widget.market.noPrice;
+
+    // LMSR Estimate
     setState(() {
-      _estimatedShares = amount / price;
+      _estimatedShares = LmsrService.estimateSharesReceived(
+        amount: amount,
+        currentYesShares: widget.market.yesShares,
+        currentNoShares: widget.market.noShares,
+        b: widget.market.liquidityB,
+        isYesOutcome: widget.isYes,
+      );
     });
   }
 

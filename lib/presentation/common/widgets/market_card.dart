@@ -87,7 +87,7 @@ class MarketCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Vol: ₦${market.initialLiquidity.toStringAsFixed(0)}', // Placeholder for volume
+                    'Vol: ₦${market.volume.toStringAsFixed(0)}',
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(color: AppColors.textHint),
