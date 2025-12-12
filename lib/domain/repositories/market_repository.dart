@@ -28,4 +28,7 @@ abstract class MarketRepository {
     required String outcome,
     required double shares,
   });
+
+  /// Fetches price history for a market.
+  Future<List<Map<String, dynamic>>> fetchMarketHistory(String marketId);
 }

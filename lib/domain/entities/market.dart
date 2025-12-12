@@ -14,6 +14,7 @@ class Market extends Equatable {
   final double liquidityB;
   final double volume;
   final String? resolution;
+  final String? rules;
 
   const Market({
     required this.id,
@@ -29,6 +30,7 @@ class Market extends Equatable {
     required this.liquidityB,
     required this.volume,
     this.resolution,
+    this.rules,
   });
 
   factory Market.fromJson(Map<String, dynamic> json) {
@@ -48,6 +50,7 @@ class Market extends Equatable {
       liquidityB: (json['liquidity_b'] as num?)?.toDouble() ?? 100.0,
       volume: (json['volume'] as num?)?.toDouble() ?? 0.0,
       resolution: json['resolution_outcome'] as String?,
+      rules: json['rules'] as String?,
     );
   }
 
@@ -66,5 +69,6 @@ class Market extends Equatable {
     liquidityB,
     volume,
     resolution,
+    rules,
   ];
 }

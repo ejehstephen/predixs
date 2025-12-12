@@ -1,4 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,7 +41,22 @@ class MarketDetailScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.share_outlined),
             color: AppColors.textPrimary,
-            onPressed: () {},
+            onPressed: () async {
+              final market = marketAsync.asData?.value;
+              if (market != null) {
+                try {
+                  await Share.share(
+                    'Predict now on Predixs: ${market.title} \n\n#Predixs #PredictionMarket',
+                  );
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Could not share: $e')),
+                    );
+                  }
+                }
+              }
+            },
           ),
         ],
       ),
@@ -131,7 +147,22 @@ class MarketDetailScreen extends ConsumerWidget {
                 ),
                 const Gap(24),
                 Expanded(
-                  child: _MarketChart(isYesTrend: market.yesPrice > 0.5),
+                  child: Consumer(
+                    builder: (context, ref, child) {
+                      final historyAsync = ref.watch(
+                        marketHistoryProvider(market.id),
+                      );
+                      return historyAsync.when(
+                        data: (history) => _MarketChart(
+                          isYesTrend: market.yesPrice > 0.5,
+                          history: history,
+                        ),
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (_, __) => const SizedBox(),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -173,7 +204,7 @@ class MarketDetailScreen extends ConsumerWidget {
           const Gap(32),
 
           // Details Stats
-          _buildStatsGrid(market).animate().fadeIn(delay: 500.ms),
+          _buildStatsGrid(context, market).animate().fadeIn(delay: 500.ms),
 
           const Gap(100), // Bottom padding for sticky bar
         ],
@@ -181,7 +212,7 @@ class MarketDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsGrid(Market market) {
+  Widget _buildStatsGrid(BuildContext context, Market market) {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -203,7 +234,60 @@ class MarketDetailScreen extends ConsumerWidget {
           value:
               '${market.endTime.day}/${market.endTime.month}/${market.endTime.year}',
         ),
-        const _StatTile(label: 'Rules', value: 'View Rules'),
+        _StatTile(
+          label: 'Rules',
+          value: 'View Rules',
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              backgroundColor: Colors.transparent,
+              isScrollControlled: true,
+              builder: (context) => Container(
+                padding: const EdgeInsets.all(24).copyWith(bottom: 48),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const Gap(24),
+                    Text(
+                      'Market Rules',
+                      style: GoogleFonts.outfit(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const Gap(16),
+                    Text(
+                      market.rules ??
+                          'Standard market rules apply. Market resolves based on the specific outcome defined in the title/description.',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        color: AppColors.textPrimary,
+                        height: 1.5,
+                      ),
+                    ),
+                    const Gap(24),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -362,39 +446,47 @@ class _PredictionCard extends StatelessWidget {
 class _StatTile extends StatelessWidget {
   final String label;
   final String value;
+  final VoidCallback? onTap;
 
-  const _StatTile({required this.label, required this.value});
+  const _StatTile({required this.label, required this.value, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-            ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
           ),
-          const Gap(4),
-          Text(
-            value,
-            style: GoogleFonts.outfit(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
-            overflow: TextOverflow.ellipsis,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+              const Gap(4),
+              Text(
+                value,
+                style: GoogleFonts.outfit(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -402,36 +494,38 @@ class _StatTile extends StatelessWidget {
 
 class _MarketChart extends StatelessWidget {
   final bool isYesTrend;
+  final List<MarketPricePoint> history;
 
-  const _MarketChart({required this.isYesTrend});
+  const _MarketChart({required this.isYesTrend, required this.history});
 
   @override
   Widget build(BuildContext context) {
     final color = isYesTrend ? AppColors.success : AppColors.error;
 
-    // Dummy Data
-    final spots = [
-      const FlSpot(0, 0.4),
-      const FlSpot(1, 0.45),
-      const FlSpot(2, 0.42),
-      const FlSpot(3, 0.5),
-      const FlSpot(4, 0.48),
-      const FlSpot(5, 0.55),
-      const FlSpot(6, 0.6),
-      const FlSpot(7, 0.65),
-      const FlSpot(8, 0.62),
-      const FlSpot(9, 0.7),
-    ];
+    if (history.isEmpty) {
+      return Center(
+        child: Text(
+          'No history yet',
+          style: GoogleFonts.inter(color: Colors.grey),
+        ),
+      );
+    }
+
+    // Map history to spots (X: Index, Y: Yes Price)
+    final spots = history.asMap().entries.map((e) {
+      return FlSpot(e.key.toDouble(), e.value.yesPrice);
+    }).toList();
 
     return LineChart(
       LineChartData(
         gridData: const FlGridData(show: false),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
+        // Add some padding to Y axis
+        minY: 0,
+        maxY: 1.0,
         minX: 0,
-        maxX: 9,
-        minY: 0.3,
-        maxY: 0.8,
+        maxX: (history.length - 1).toDouble(),
         lineBarsData: [
           LineChartBarData(
             spots: spots,

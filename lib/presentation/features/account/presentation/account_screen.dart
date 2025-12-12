@@ -9,6 +9,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../providers/user_providers.dart';
 import 'widgets/verification_modal.dart';
+import 'widgets/help_support_modal.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -209,7 +210,14 @@ class AccountScreen extends ConsumerWidget {
                   _MenuOption(
                     icon: Icons.headphones_outlined,
                     title: 'Help & Support',
-                    onTap: () {},
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const HelpSupportModal(),
+                      );
+                    },
                   ),
                 ],
               ),

@@ -12,6 +12,7 @@ create table public.markets (
   end_date timestamp with time zone not null,
   is_resolved boolean default false,
   resolution_outcome text, -- 'Yes', 'No'
+  rules text, -- Market specific rules
   
   -- LMSR State
   -- b: Liquidity parameter. Higher b = less price movement per trade.
@@ -48,6 +49,19 @@ create table public.positions (
 -- Enable RLS
 alter table public.positions enable row level security;
 create policy "Users view own positions" on public.positions for select using (auth.uid() = user_id);
+
+create table public.market_price_history (
+  id uuid default gen_random_uuid() primary key,
+  market_id uuid references public.markets(id) not null,
+  yes_price numeric not null,
+  no_price numeric not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS
+alter table public.market_price_history enable row level security;
+create policy "History is public" on public.market_price_history for select using (true);
+
 
 -- LMSR Cost Function (Helper)
 -- Robust implementation using Log-Sum-Exp trick to prevent overflow
@@ -189,6 +203,10 @@ begin
       volume = volume + p_amount
   where id = p_market_id;
 
+  -- 4b. Insert Price History
+  insert into public.market_price_history (market_id, yes_price, no_price)
+  values (p_market_id, v_new_limit_price_yes, v_new_limit_price_no);
+
   -- 5. Deduct Wallet
   update public.wallets set balance = balance - p_amount, updated_at = now() where id = v_wallet_id;
   insert into public.transactions (user_id, type, amount, status) values (v_user_id, 'buy', -p_amount, 'completed');
@@ -293,6 +311,10 @@ begin
       no_price = v_new_limit_price_no
   where id = p_market_id;
 
+  -- Insert Price History
+  insert into public.market_price_history (market_id, yes_price, no_price)
+  values (p_market_id, v_new_limit_price_yes, v_new_limit_price_no);
+
   -- Update Wallet
   select id into v_wallet_id from public.wallets where user_id = v_user_id;
   update public.wallets set balance = balance + v_return_amount, updated_at = now() where id = v_wallet_id;
@@ -312,11 +334,76 @@ begin
 end;
 $$;
 
+-- RPC: Resolve Market (Admin only in real app, but public RPC for now for testing)
+-- Distributes payouts to winning shareholders. Be careful!
+-- Logic: 
+-- 1. Mark market resolved
+-- 2. Find all positions with winning side.
+-- 3. Pay them out: Shares * 1.0 (Each share pays out ₦1 if winning)
+-- 4. Losing shares expire worthless (₦0).
+create or replace function resolve_market(
+  p_market_id uuid,
+  p_outcome text -- 'Yes' or 'No'
+) returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_market_resolved boolean;
+  v_pos record;
+  v_payout numeric;
+  v_count integer := 0;
+begin
+  -- Check if already resolved
+  select is_resolved into v_market_resolved from public.markets where id = p_market_id;
+  if v_market_resolved then raise exception 'Market already resolved'; end if;
+  
+  if p_outcome not in ('Yes', 'No') then raise exception 'Invalid outcome'; end if;
+
+  -- 1. Update Market
+  update public.markets 
+  set is_resolved = true, 
+      resolution_outcome = p_outcome,
+      -- Set prices to 0/1 for visual clarity? 
+      yes_price = case when p_outcome = 'Yes' then 1.0 else 0.0 end,
+      no_price = case when p_outcome = 'No' then 1.0 else 0.0 end
+  where id = p_market_id;
+
+  -- 2. Loop through winning positions and Payout
+  -- In prediction markets, 1 Share = $1 (or ₦1) payoff if correct. 
+  -- We simply add 'shares' amount to wallet balance.
+  
+  for v_pos in 
+    select * from public.positions 
+    where market_id = p_market_id and side = p_outcome 
+  loop
+    v_payout := v_pos.shares; -- 1 share = 1 currency unit
+    
+    if v_payout > 0 then
+        update public.wallets 
+        set balance = balance + v_payout 
+        where user_id = v_pos.user_id;
+        
+        insert into public.transactions (user_id, type, amount, status)
+        values (v_pos.user_id, 'payout', v_payout, 'completed');
+        
+        v_count := v_count + 1;
+    end if;
+  end loop;
+  
+  -- Losing positions just stay as record, but have no value. 
+  -- We could archive them, but let's keep for history.
+
+  return json_build_object('success', true, 'payouts_processed', v_count);
+end;
+$$;
+
 -- Seed Data (LMSR uses shares to set price)
 -- b=100. To get price 0.5, shares can be 0,0.
-insert into public.markets (title, category, end_date, yes_price, no_price, image_url, liquidity_b, yes_shares, no_shares)
+insert into public.markets (title, category, end_date, yes_price, no_price, image_url, liquidity_b, yes_shares, no_shares, rules)
 select * from (values
-  ('Will BTC hit $100k in 2024?', 'Crypto', now() + interval '30 days', 0.5, 0.5, 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&q=80&w=500', 100.0, 0, 0),
-  ('Will Man City win the Premier League?', 'Sports', now() + interval '14 days', 0.5, 0.5, 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=500', 100.0, 0, 0),
-  ('Will GPT-5 be released before Q3?', 'Tech', now() + interval '90 days', 0.5, 0.5, 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=500', 100.0, 0, 0)
-) as v(a,b,c,d,e,f,g,h,i);
+  ('Will BTC hit $100k in 2024?', 'Crypto', now() + interval '30 days', 0.5, 0.5, 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&q=80&w=500', 100.0, 0, 0, 'Market resolves to YES if BTC matches or exceeds $100,000 on CoinGecko before Jan 1, 2025.'),
+  ('Will Man City win the Premier League?', 'Sports', now() + interval '14 days', 0.5, 0.5, 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=500', 100.0, 0, 0, 'Market resolves to YES if Manchester City is declared the winner of the 2023/2024 Premier League.'),
+  ('Will GPT-5 be released before Q3?', 'Tech', now() + interval '90 days', 0.5, 0.5, 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=500', 100.0, 0, 0, 'Market resolves to YES if OpenAI releases GPT-5 (specifically named) before July 1, 2024.')
+) as v(a,b,c,d,e,f,g,h,i,j);

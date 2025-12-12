@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -46,41 +47,107 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary, // Using primary color for branding
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Logo Icon (Placeholder or Icon)
-            Icon(Icons.show_chart, size: 80, color: AppColors.accent)
-                .animate()
-                .scale(duration: 600.ms, curve: Curves.easeOutBack)
-                .fade(),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.primary,
+              AppColors.primary.withOpacity(0.8),
+              Color(0xFF3730A3), // Deep Indigo
+            ],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Animated Background Circle (Subtle)
+              Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.show_chart,
+                        size: 60,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                  .animate(
+                    onPlay: (controller) => controller.repeat(reverse: true),
+                  )
+                  .scale(
+                    begin: const Offset(0.95, 0.95),
+                    end: const Offset(1.05, 1.05),
+                    duration: 2000.ms,
+                    curve: Curves.easeInOut,
+                  )
+                  .animate()
+                  .fadeIn(duration: 600.ms)
+                  .scale(
+                    begin: const Offset(0.5, 0.5),
+                    duration: 600.ms,
+                    curve: Curves.easeOutBack,
+                  ),
 
-            const SizedBox(height: 16),
+              const Gap(32),
 
-            // App Name
-            Text(
-              'Predix',
-              style: GoogleFonts.outfit(
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 1.5,
+              // App Name
+              Column(
+                children: [
+                  Text(
+                        'PREDIXS',
+                        style: GoogleFonts.outfit(
+                          fontSize: 42,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 4,
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(delay: 400.ms)
+                      .moveY(
+                        begin: 20,
+                        end: 0,
+                        duration: 600.ms,
+                        curve: Curves.easeOut,
+                      ),
+
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(top: 8, bottom: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ).animate().scaleX(
+                    begin: 0,
+                    end: 1,
+                    delay: 600.ms,
+                    duration: 600.ms,
+                    curve: Curves.easeOut,
+                  ),
+
+                  Text(
+                    'The Future of Prediction',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.8),
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ).animate().fadeIn(delay: 800.ms),
+                ],
               ),
-            ).animate().fadeIn(delay: 300.ms).moveY(begin: 20, end: 0),
-
-            const SizedBox(height: 8),
-
-            Text(
-              'Predict. Invest. Win.',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                color: Colors.white70,
-                letterSpacing: 0.5,
-              ),
-            ).animate().fadeIn(delay: 500.ms),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -74,4 +74,21 @@ class MarketRepositoryImpl implements MarketRepository {
       throw Exception('Sell failed: $e');
     }
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchMarketHistory(String marketId) async {
+    try {
+      final List<dynamic> response = await _client
+          .from('market_price_history')
+          .select()
+          .eq('market_id', marketId)
+          .order('created_at', ascending: true);
+
+      return response.cast<Map<String, dynamic>>();
+    } catch (e) {
+      // Return empty if fail or no history
+      print('Error fetching history: $e');
+      return [];
+    }
+  }
 }
