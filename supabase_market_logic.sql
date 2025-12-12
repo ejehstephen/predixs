@@ -50,7 +50,7 @@ create table public.positions (
 alter table public.positions enable row level security;
 create policy "Users view own positions" on public.positions for select using (auth.uid() = user_id);
 
-create table public.market_price_history (
+create table if not exists public.market_price_history (
   id uuid default gen_random_uuid() primary key,
   market_id uuid references public.markets(id) not null,
   yes_price numeric not null,
@@ -60,6 +60,7 @@ create table public.market_price_history (
 
 -- Enable RLS
 alter table public.market_price_history enable row level security;
+drop policy if exists "History is public" on public.market_price_history;
 create policy "History is public" on public.market_price_history for select using (true);
 
 
@@ -372,7 +373,8 @@ begin
 
   -- 2. Loop through winning positions and Payout
   -- In prediction markets, 1 Share = $1 (or ₦1) payoff if correct. 
-  -- We simply add 'shares' amount to wallet balance.
+  -- We simply add 'shares' amount to wallet balance (minus fee).
+  -- Fee Strategy: 2.0% Settlement Fee on Winnings.
   
   for v_pos in 
     select * from public.positions 
@@ -381,14 +383,37 @@ begin
     v_payout := v_pos.shares; -- 1 share = 1 currency unit
     
     if v_payout > 0 then
-        update public.wallets 
-        set balance = balance + v_payout 
-        where user_id = v_pos.user_id;
-        
-        insert into public.transactions (user_id, type, amount, status)
-        values (v_pos.user_id, 'payout', v_payout, 'completed');
-        
-        v_count := v_count + 1;
+        -- Calculate Fee
+        declare
+           v_fee numeric := v_payout * 0.02;
+           v_net_payout numeric := v_payout - v_fee;
+        begin
+           update public.wallets 
+           set balance = balance + v_net_payout 
+           where user_id = v_pos.user_id;
+           
+           -- Log Payout
+           insert into public.transactions (user_id, type, amount, status, metadata)
+           values (
+             v_pos.user_id, 
+             'payout', 
+             v_net_payout, 
+             'completed',
+             json_build_object('market_id', p_market_id, 'gross_payout', v_payout, 'fee_deducted', v_fee)
+           );
+
+           -- Log Fee (for Admin Revenue tracking)
+           insert into public.transactions (user_id, type, amount, status, metadata)
+           values (
+             v_pos.user_id, 
+             'fee', 
+             v_fee, 
+             'completed', 
+             json_build_object('source', 'market_resolution', 'market_id', p_market_id)
+           );
+           
+           v_count := v_count + 1;
+        end;
     end if;
   end loop;
   
