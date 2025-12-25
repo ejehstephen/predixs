@@ -22,3 +22,12 @@ final notificationsProvider =
       final repo = ref.watch(userRepositoryProvider);
       return await repo.fetchNotifications();
     });
+
+final unreadNotificationCountProvider = Provider.autoDispose<int>((ref) {
+  final notificationsAsync = ref.watch(notificationsProvider);
+  return notificationsAsync.when(
+    data: (notifications) => notifications.where((n) => !n.isRead).length,
+    loading: () => 0,
+    error: (_, __) => 0,
+  );
+});

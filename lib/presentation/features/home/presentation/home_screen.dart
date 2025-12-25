@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../notifications/providers/notification_providers.dart';
 
 import '../../market/providers/market_providers.dart';
 import '../../market/presentation/widgets/market_card.dart';
@@ -31,12 +32,49 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
         actions: [
-          IconButton(
-            onPressed: () => context.push('/notifications'),
-            icon: const Icon(
-              Icons.notifications_outlined,
-              color: AppColors.textPrimary,
-            ),
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () => context.push('/notifications'),
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Consumer(
+                builder: (context, ref, child) {
+                  final unreadCount = ref.watch(
+                    unreadNotificationCountProvider,
+                  );
+                  if (unreadCount == 0) return const SizedBox.shrink();
+
+                  return Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: AppColors.error,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        unreadCount > 9 ? '9+' : '$unreadCount',
+                        style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ).animate().scale(duration: 200.ms),
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),
