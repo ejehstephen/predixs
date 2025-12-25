@@ -8,4 +8,8 @@ abstract class UserRepository {
   Future<void> markNotificationRead(String id);
   Future<void> uploadAvatar(File file);
   Future<void> verifyKyc({required String phone, required String nin});
+
+  // Admin Methods
+  Future<List<UserProfile>> getAllUsers();
+  Future<void> updateUserStatus(String userId, {bool? isBanned});
 }

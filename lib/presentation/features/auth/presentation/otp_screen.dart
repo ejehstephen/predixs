@@ -101,7 +101,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
             ),
             const Gap(8),
             Text(
-              'Enter the 4-digit code sent to your phone number.',
+              'Enter the 4-digit code sent to your email address.',
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 16,

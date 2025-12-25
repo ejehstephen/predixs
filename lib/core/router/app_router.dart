@@ -19,6 +19,7 @@ import '../../presentation/features/wallet/presentation/withdraw_screen.dart';
 import '../../presentation/features/admin/presentation/admin_dashboard_screen.dart';
 import '../../presentation/features/admin/presentation/create_market_screen.dart';
 import '../../presentation/features/admin/presentation/resolve_market_list_screen.dart';
+import '../../presentation/features/admin/presentation/user_management_screen.dart';
 import '../../data/datasources/local_storage_service.dart';
 
 // Placeholder screens for navigation setup
@@ -227,6 +228,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'resolve-markets',
             builder: (context, state) => const ResolveMarketListScreen(),
+          ),
+          GoRoute(
+            path: 'users',
+            builder: (context, state) => const UserManagementScreen(),
           ),
         ],
       ),

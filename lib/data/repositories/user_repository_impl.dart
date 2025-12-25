@@ -190,4 +190,33 @@ class UserRepositoryImpl implements UserRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<List<UserProfile>> getAllUsers() async {
+    try {
+      final response = await _client
+          .from('profiles')
+          .select()
+          .order('created_at', ascending: false);
+
+      return (response as List).map((e) => UserProfile.fromJson(e)).toList();
+    } catch (e) {
+      print('Error fetching all users: $e');
+      // If error (e.g. RLS), return empty list to avoid crashing UI
+      return [];
+    }
+  }
+
+  @override
+  Future<void> updateUserStatus(String userId, {bool? isBanned}) async {
+    try {
+      await _client
+          .from('profiles')
+          .update({if (isBanned != null) 'is_banned': isBanned})
+          .eq('id', userId);
+    } catch (e) {
+      print('Error updating user status: $e');
+      rethrow;
+    }
+  }
 }

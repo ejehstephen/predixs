@@ -6,6 +6,7 @@ class UserProfile {
   final int kycLevel;
   final String? avatarUrl;
   final bool isAdmin;
+  final bool isBanned;
 
   UserProfile({
     required this.id,
@@ -15,6 +16,7 @@ class UserProfile {
     required this.kycLevel,
     this.avatarUrl,
     this.isAdmin = false,
+    this.isBanned = false,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -27,6 +29,7 @@ class UserProfile {
       avatarUrl: json['avatar_url'],
       isAdmin:
           json['is_admin'] ?? false, // We will manually inject this in Repo
+      isBanned: json['is_banned'] ?? false,
     );
   }
 
@@ -39,6 +42,7 @@ class UserProfile {
       'kyc_level': kycLevel,
       'avatar_url': avatarUrl,
       'is_admin': isAdmin,
+      'is_banned': isBanned,
     };
   }
 }

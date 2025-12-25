@@ -48,7 +48,7 @@ class AdminDashboardScreen extends StatelessWidget {
             subtitle: 'View users, banning is manual via Supabase',
             icon: Icons.people_outline,
             color: Colors.purpleAccent,
-            onTap: () {}, // Not implemented for MVP
+            onTap: () => context.push('/admin/users'),
           ),
         ],
       ),
