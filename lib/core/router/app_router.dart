@@ -16,6 +16,9 @@ import '../../presentation/features/onboarding/presentation/onboarding_screen.da
 import '../../presentation/features/wallet/presentation/deposit_screen.dart';
 import '../../presentation/features/wallet/presentation/wallet_screen.dart';
 import '../../presentation/features/wallet/presentation/withdraw_screen.dart';
+import '../../presentation/features/admin/presentation/admin_dashboard_screen.dart';
+import '../../presentation/features/admin/presentation/create_market_screen.dart';
+import '../../presentation/features/admin/presentation/resolve_market_list_screen.dart';
 import '../../data/datasources/local_storage_service.dart';
 
 // Placeholder screens for navigation setup
@@ -210,6 +213,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/notifications',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      // Admin Routes
+      GoRoute(
+        path: '/admin',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const AdminDashboardScreen(),
+        routes: [
+          GoRoute(
+            path: 'create-market',
+            builder: (context, state) => const CreateMarketScreen(),
+          ),
+          GoRoute(
+            path: 'resolve-markets',
+            builder: (context, state) => const ResolveMarketListScreen(),
+          ),
+        ],
       ),
     ],
   );

@@ -7,6 +7,7 @@ import 'package:gap/gap.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../providers/auth_providers.dart';
 import 'widgets/forgot_password_modal.dart';
+import '../../../../core/extensions/exception_extension.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -36,7 +37,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted && ref.read(authControllerProvider).hasError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${ref.read(authControllerProvider).error}'),
+            content: Text(
+              ref.read(authControllerProvider).error!.toUserFriendlyMessage,
+            ),
+            backgroundColor: AppColors.error,
           ),
         );
       }

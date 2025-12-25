@@ -153,9 +153,15 @@ begin
     v_body := 'Your wallet has been funded with ₦' || abs(NEW.amount);
     v_type := 'success';
   elsif NEW.type = 'payout' then
-     -- Handled by market resolution trigger generally, but good as backup or immediate feedback?
-     -- Let's skip to avoid double notification with Resolution Trigger
+     -- Handled by market resolution trigger generally
      return NEW; 
+  elsif NEW.type = 'fee' then
+     -- Fees are internal or minor, don't notify
+     return NEW;
+  else
+     -- Fallback for unknown types to prevent crash
+     v_title := 'Transaction Notification';
+     v_body := 'New transaction: ' || NEW.type;
   end if;
 
   insert into public.notifications (user_id, title, body, type)

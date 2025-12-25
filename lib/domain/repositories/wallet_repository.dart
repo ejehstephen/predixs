@@ -10,4 +10,7 @@ abstract class WalletRepository {
 
   /// Simulates a withdrawal (calls RPC).
   Future<void> withdraw(double amount);
+
+  /// Realtime stream of wallet balance.
+  Stream<double> watchBalance();
 }

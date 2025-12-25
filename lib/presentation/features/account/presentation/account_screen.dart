@@ -219,6 +219,14 @@ class AccountScreen extends ConsumerWidget {
                       );
                     },
                   ),
+                  if (profileAsync.value?.isAdmin == true) ...[
+                    const Divider(height: 1, indent: 60),
+                    _MenuOption(
+                      icon: Icons.admin_panel_settings_outlined,
+                      title: 'Admin Console',
+                      onTap: () => context.push('/admin'),
+                    ),
+                  ],
                 ],
               ),
             ).animate().slideY(begin: 0.1, duration: 400.ms),

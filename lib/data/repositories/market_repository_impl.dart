@@ -12,6 +12,7 @@ class MarketRepositoryImpl implements MarketRepository {
       final List<dynamic> response = await _client
           .from('markets')
           .select()
+          .eq('is_resolved', false) // Filter out resolved markets
           .order('volume', ascending: false); // Show highest volume first
       return response.cast<Map<String, dynamic>>();
     } catch (e) {
@@ -90,5 +91,15 @@ class MarketRepositoryImpl implements MarketRepository {
       print('Error fetching history: $e');
       return [];
     }
+  }
+
+  @override
+  Stream<List<Map<String, dynamic>>> watchMarkets() {
+    return _client
+        .from('markets')
+        .stream(primaryKey: ['id'])
+        .eq('is_resolved', false)
+        .order('volume', ascending: false)
+        .map((data) => data.cast<Map<String, dynamic>>());
   }
 }

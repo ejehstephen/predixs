@@ -6,9 +6,15 @@ import '../../../../domain/repositories/user_repository.dart';
 
 import '../../../../data/datasources/local_storage_service.dart';
 
+import '../../../../data/services/verification_service.dart';
+
 final userRepositoryProvider = Provider<UserRepository>((ref) {
   final localStorage = ref.watch(localStorageServiceProvider);
-  return UserRepositoryImpl(Supabase.instance.client, localStorage);
+  return UserRepositoryImpl(
+    Supabase.instance.client,
+    localStorage,
+    MockVerificationService(),
+  );
 });
 
 final notificationsProvider =

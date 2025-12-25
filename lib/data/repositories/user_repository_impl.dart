@@ -4,12 +4,18 @@ import '../../domain/entities/notification.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../datasources/local_storage_service.dart';
+import '../services/verification_service.dart';
 
 class UserRepositoryImpl implements UserRepository {
   final SupabaseClient _client;
   final LocalStorageService _localStorage;
+  final VerificationService _verificationService;
 
-  UserRepositoryImpl(this._client, this._localStorage);
+  UserRepositoryImpl(
+    this._client,
+    this._localStorage,
+    this._verificationService,
+  );
 
   @override
   Future<UserProfile?> fetchProfile() async {
@@ -25,7 +31,26 @@ class UserRepositoryImpl implements UserRepository {
 
       if (response == null) return _localStorage.getProfile();
 
-      final profile = UserProfile.fromJson(response);
+      // Check if Admin
+      bool isAdmin = false;
+      try {
+        final adminResponse = await _client
+            .from('admins')
+            .select()
+            .eq('profile_id', userId)
+            .maybeSingle();
+        if (adminResponse != null) {
+          isAdmin = true;
+        }
+      } catch (_) {
+        // Ignore RLS errors or missing table
+      }
+
+      // Merge Admin Status into Profile
+      final profileData = Map<String, dynamic>.from(response);
+      profileData['is_admin'] = isAdmin;
+
+      final profile = UserProfile.fromJson(profileData);
       await _localStorage.saveProfile(profile); // Cache it
       return profile;
     } catch (e) {
@@ -107,6 +132,7 @@ class UserRepositoryImpl implements UserRepository {
           phone: currentProfile.phone,
           kycLevel: currentProfile.kycLevel,
           avatarUrl: imageUrl,
+          isAdmin: currentProfile.isAdmin,
         );
         await _localStorage.saveProfile(updatedProfile);
       }
@@ -118,35 +144,49 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
-  Future<void> updatePhoneAndVerify(String phone) async {
+  Future<void> verifyKyc({required String phone, required String nin}) async {
     try {
       final userId = _client.auth.currentUser?.id;
-      if (userId == null) return;
+      if (userId == null) throw Exception('User not logged in');
 
-      // Update Supabase
+      // 1. Verify NIN (Mock or Real)
+      final isValid = await _verificationService.verifyNin(
+        nin: nin,
+        phoneNumber: phone,
+      );
+
+      if (!isValid) {
+        throw Exception('Identity verification failed. Please check your NIN.');
+      }
+
+      // 2. Update Supabase Profile
       await _client
           .from('profiles')
           .update({
             'phone': phone,
-            'kyc_level': 1, // Auto-verify
+            'nin': nin,
+            'nin_verified': true,
+            'kyc_level': 1, // Verified Level 1
           })
           .eq('id', userId);
 
-      // Update Cache
+      // 3. Update Local Cache
       final currentProfile = _localStorage.getProfile();
       if (currentProfile != null) {
         final updatedProfile = UserProfile(
           id: currentProfile.id,
           email: currentProfile.email,
           fullName: currentProfile.fullName,
-          phone: phone, // New Phone
-          kycLevel: 1, // New Level
+          phone: phone,
+          kycLevel: 1,
           avatarUrl: currentProfile.avatarUrl,
+          isAdmin: currentProfile.isAdmin,
         );
+        // Note: Profile entity doesn't have NIN field yet, but that's fine for now (security).
         await _localStorage.saveProfile(updatedProfile);
       }
     } catch (e) {
-      print('Error verifying phone: $e');
+      print('Error completing KYC: $e');
       rethrow;
     }
   }

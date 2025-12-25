@@ -33,9 +33,9 @@ final walletRepositoryProvider = Provider<WalletRepository>((ref) {
   return WalletRepositoryImpl(Supabase.instance.client);
 });
 
-final walletBalanceProvider = FutureProvider<double>((ref) async {
+final walletBalanceProvider = StreamProvider<double>((ref) {
   final repo = ref.watch(walletRepositoryProvider);
-  return await repo.fetchBalance();
+  return repo.watchBalance();
 });
 
 final walletTransactionsProvider = FutureProvider<List<WalletTransaction>>((

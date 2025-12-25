@@ -4,8 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../domain/entities/market.dart';
+
 import '../../market/providers/market_providers.dart';
+import '../../market/presentation/widgets/market_card.dart';
 import '../../wallet/providers/wallet_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -173,7 +174,10 @@ class HomeScreen extends ConsumerWidget {
                       const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     final market = markets[index];
-                    return _MarketCard(market: market)
+                    return MarketCard(
+                          market: market,
+                          showVolume: false, // Use Icon for Home
+                        )
                         .animate()
                         .fadeIn(delay: (100 * index).ms)
                         .moveX(begin: 30, end: 0);
@@ -200,143 +204,6 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 80), // Bottom padding for navbar
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _MarketCard extends StatelessWidget {
-  final Market market;
-
-  const _MarketCard({required this.market});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () => context.push('/markets/${market.id}'),
-        borderRadius: BorderRadius.circular(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    market.category,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Icon(Icons.trending_up, color: AppColors.success, size: 20),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              market.title,
-              style: GoogleFonts.outfit(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _PriceChip(
-                    label: 'Yes',
-                    price: market.yesPrice,
-                    color: AppColors.success,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _PriceChip(
-                    label: 'No',
-                    price: market.noPrice,
-                    color: AppColors.error,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PriceChip extends StatelessWidget {
-  final String label;
-  final double price;
-  final Color color;
-
-  const _PriceChip({
-    required this.label,
-    required this.price,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '₦${(price * 100).toStringAsFixed(1)}', // Assuming base 100 naira per share for simplicity
-            style: GoogleFonts.outfit(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(
-            '${(price * 100).toStringAsFixed(0)}%',
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              color: color.withOpacity(0.8),
-            ),
-          ),
-        ],
       ),
     );
   }

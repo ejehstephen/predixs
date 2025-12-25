@@ -31,4 +31,7 @@ abstract class MarketRepository {
 
   /// Fetches price history for a market.
   Future<List<Map<String, dynamic>>> fetchMarketHistory(String marketId);
+
+  /// Realtime stream of active markets.
+  Stream<List<Map<String, dynamic>>> watchMarkets();
 }

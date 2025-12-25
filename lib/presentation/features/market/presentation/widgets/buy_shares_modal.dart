@@ -9,6 +9,7 @@ import '../../../../../core/services/lmsr_service.dart';
 import '../../../portfolio/providers/portfolio_providers.dart';
 import '../../../wallet/providers/wallet_providers.dart';
 import '../../providers/market_providers.dart';
+import '../../../../../core/extensions/exception_extension.dart';
 
 class BuySharesModal extends ConsumerStatefulWidget {
   final Market market;
@@ -93,7 +94,7 @@ class _BuySharesModalState extends ConsumerState<BuySharesModal> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Trade failed: ${e.toString()}'),
+            content: Text(e.toUserFriendlyMessage),
             backgroundColor: AppColors.error,
           ),
         );

@@ -56,4 +56,16 @@ class PortfolioRepositoryImpl implements PortfolioRepository {
       return [];
     }
   }
+
+  @override
+  Stream<List<Map<String, dynamic>>> watchUserPositions() {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return Stream.value([]);
+
+    return _client
+        .from('positions')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .map((data) => data.cast<Map<String, dynamic>>());
+  }
 }

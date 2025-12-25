@@ -60,4 +60,19 @@ class WalletRepositoryImpl implements WalletRepository {
       throw Exception('Failed to withdraw: $e');
     }
   }
+
+  @override
+  Stream<double> watchBalance() {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return Stream.value(0.0);
+
+    return _client
+        .from('wallets')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .map((data) {
+          if (data.isEmpty) return 0.0;
+          return (data.first['balance'] as num).toDouble();
+        });
+  }
 }

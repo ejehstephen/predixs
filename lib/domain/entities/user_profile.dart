@@ -5,6 +5,7 @@ class UserProfile {
   final String phone;
   final int kycLevel;
   final String? avatarUrl;
+  final bool isAdmin;
 
   UserProfile({
     required this.id,
@@ -13,6 +14,7 @@ class UserProfile {
     required this.phone,
     required this.kycLevel,
     this.avatarUrl,
+    this.isAdmin = false,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,8 @@ class UserProfile {
       phone: json['phone'] ?? '',
       kycLevel: json['kyc_level'] ?? 0,
       avatarUrl: json['avatar_url'],
+      isAdmin:
+          json['is_admin'] ?? false, // We will manually inject this in Repo
     );
   }
 
@@ -34,6 +38,7 @@ class UserProfile {
       'phone': phone,
       'kyc_level': kycLevel,
       'avatar_url': avatarUrl,
+      'is_admin': isAdmin,
     };
   }
 }

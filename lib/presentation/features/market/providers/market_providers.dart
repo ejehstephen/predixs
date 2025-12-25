@@ -11,10 +11,11 @@ final marketRepositoryProvider = Provider<MarketRepository>((ref) {
   return MarketRepositoryImpl(Supabase.instance.client);
 });
 
-final marketListProvider = FutureProvider<List<Market>>((ref) async {
+final marketListProvider = StreamProvider<List<Market>>((ref) {
   final repo = ref.watch(marketRepositoryProvider);
-  final data = await repo.fetchMarkets();
-  return data.map((json) => Market.fromJson(json)).toList();
+  return repo.watchMarkets().map((data) {
+    return data.map((json) => Market.fromJson(json)).toList();
+  });
 });
 
 final marketProvider = FutureProvider.family<Market, String>((ref, id) async {

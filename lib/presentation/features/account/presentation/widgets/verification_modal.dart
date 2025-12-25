@@ -14,12 +14,14 @@ class VerificationModal extends ConsumerStatefulWidget {
 
 class _VerificationModalState extends ConsumerState<VerificationModal> {
   final _phoneController = TextEditingController();
+  final _ninController = TextEditingController(); // Added NIN Controller
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
   @override
   void dispose() {
     _phoneController.dispose();
+    _ninController.dispose();
     super.dispose();
   }
 
@@ -30,13 +32,10 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
 
     try {
       final phone = _phoneController.text.trim();
+      final nin = _ninController.text.trim();
 
-      // Call repository to update phone and verify
-      await ref
-          .read(userRepositoryProvider)
-          .updatePhoneAndVerify(
-            phone,
-          ); // Assuming repository is exposed via provider correctly
+      // Call repository to update phone and verify NIN
+      await ref.read(userRepositoryProvider).verifyKyc(phone: phone, nin: nin);
 
       // Refresh profile provider to update UI
       ref.invalidate(userProfileProvider);
@@ -97,7 +96,7 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Verify Phone Number',
+              'Identity Verification', // Updated Title
               style: GoogleFonts.outfit(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -106,7 +105,7 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Add your phone number to become a verified user.',
+              'Verify your identity with your Phone Number and NIN.',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: AppColors.textSecondary,
@@ -133,6 +132,36 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter your phone number';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _ninController,
+              keyboardType: TextInputType.number,
+              maxLength: 11, // NIN is 11 digits
+              decoration: InputDecoration(
+                labelText: 'National Identity Number (NIN)',
+                hintText: '12345678901',
+                counterText: '', // Hide counter
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                prefixIcon: const Icon(
+                  Icons.badge_outlined,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your NIN';
+                }
+                if (value.length != 11) {
+                  return 'NIN must be exactly 11 digits';
                 }
                 return null;
               },

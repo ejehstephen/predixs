@@ -6,6 +6,7 @@ import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../providers/auth_providers.dart';
+import '../../../../core/extensions/exception_extension.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -44,7 +45,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         if (ref.read(authControllerProvider).hasError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: ${ref.read(authControllerProvider).error}'),
+              content: Text(
+                ref.read(authControllerProvider).error!.toUserFriendlyMessage,
+              ),
+              backgroundColor: AppColors.error,
             ),
           );
         } else {

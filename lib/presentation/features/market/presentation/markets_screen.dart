@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../domain/entities/market.dart';
+
 import '../providers/market_providers.dart';
+import 'widgets/market_card.dart';
 
 class MarketsScreen extends ConsumerStatefulWidget {
   const MarketsScreen({super.key});
@@ -148,7 +149,7 @@ class _MarketsScreenState extends ConsumerState<MarketsScreen> {
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 16),
                       itemBuilder: (context, index) {
-                        return _MarketCard(market: markets[index])
+                        return MarketCard(market: markets[index])
                             .animate()
                             .fadeIn(duration: 300.ms)
                             .moveY(begin: 20, end: 0);
@@ -165,146 +166,6 @@ class _MarketsScreenState extends ConsumerState<MarketsScreen> {
                     ),
                   ),
                 ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Duplicated for now to keep files self-contained, realistically should be shared.
-class _MarketCard extends StatelessWidget {
-  final Market market;
-
-  const _MarketCard({required this.market});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () => context.push('/markets/${market.id}'),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  market.category,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  'Vol: \u20A6${(market.volume / 1000).toStringAsFixed(1)}k',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              market.title,
-              style: GoogleFonts.outfit(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _PriceBar(
-                    label: 'Yes',
-                    price: market.yesPrice,
-                    color: AppColors.success,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _PriceBar(
-                    label: 'No',
-                    price: market.noPrice,
-                    color: AppColors.error,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PriceBar extends StatelessWidget {
-  final String label;
-  final double price;
-  final Color color;
-
-  const _PriceBar({
-    required this.label,
-    required this.price,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Stack(
-        children: [
-          FractionallySizedBox(
-            widthFactor: price,
-            child: Container(
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
-                ),
-                Text(
-                  '${(price * 100).toStringAsFixed(0)}%',
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-              ],
-            ),
           ),
         ],
       ),

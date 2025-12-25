@@ -7,5 +7,5 @@ abstract class UserRepository {
   Future<List<NotificationItem>> fetchNotifications();
   Future<void> markNotificationRead(String id);
   Future<void> uploadAvatar(File file);
-  Future<void> updatePhoneAndVerify(String phone);
+  Future<void> verifyKyc({required String phone, required String nin});
 }

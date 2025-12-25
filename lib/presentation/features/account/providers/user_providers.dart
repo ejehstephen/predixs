@@ -8,9 +8,15 @@ import '../../auth/providers/auth_providers.dart';
 import '../../../../data/datasources/local_storage_service.dart';
 
 // Reuse the repository provider if we move it here or import it
+import '../../../../data/services/verification_service.dart';
+
 final userRepositoryProvider = Provider<UserRepository>((ref) {
   final localStorage = ref.watch(localStorageServiceProvider);
-  return UserRepositoryImpl(Supabase.instance.client, localStorage);
+  return UserRepositoryImpl(
+    Supabase.instance.client,
+    localStorage,
+    MockVerificationService(),
+  );
 });
 
 final userProfileProvider = FutureProvider<UserProfile?>((ref) async {
