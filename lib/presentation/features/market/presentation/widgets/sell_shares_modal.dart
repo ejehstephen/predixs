@@ -82,6 +82,16 @@ class _SellSharesModalState extends ConsumerState<SellSharesModal> {
       return;
     }
 
+    if (DateTime.now().isAfter(widget.position.marketEndTime)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cannot sell: Market is locked for trading!'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/services/paystack_service.dart';
 import '../providers/wallet_providers.dart';
 
 class DepositScreen extends ConsumerStatefulWidget {
@@ -28,20 +30,47 @@ class _DepositScreenState extends ConsumerState<DepositScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(walletRepositoryProvider).deposit(amount);
+      // --- PAYSTACK INTEGRATION ---
+      final user = Supabase.instance.client.auth.currentUser;
+      final email = user?.email ?? 'customer@predixs.com';
+      final reference = 'Dep_${DateTime.now().millisecondsSinceEpoch}';
 
-      // Refresh wallet data
-      ref.invalidate(walletBalanceProvider);
-      ref.invalidate(walletTransactionsProvider);
+      final response = await PaystackService().chargeCard(
+        context: context,
+        amount: amount,
+        email: email,
+        reference: reference,
+      );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Deposit Successful!'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        context.pop();
+      if (response != null && response.status) {
+        // Payment Successful
+        await ref.read(walletRepositoryProvider).deposit(amount);
+
+        // Refresh wallet data
+        ref.invalidate(walletBalanceProvider);
+        ref.invalidate(walletTransactionsProvider);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Deposit Successful: Ref ${response.reference}'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          context.pop();
+        }
+      } else {
+        // Payment Failed/Cancelled
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Payment Cancelled or Failed: ${response?.message ?? "Unknown"}',
+              ),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -144,7 +173,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen> {
                       ),
                     )
                   : Text(
-                      'Confirm Deposit (Simulated)',
+                      'Proceed to Payment',
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

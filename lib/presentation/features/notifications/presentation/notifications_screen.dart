@@ -6,12 +6,30 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../domain/entities/notification.dart';
 import '../providers/notification_providers.dart';
+import 'widgets/notification_detail_modal.dart';
 
-class NotificationsScreen extends ConsumerWidget {
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Mark all as read when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(userRepositoryProvider).markAllNotificationsRead();
+      // Invalidate to refresh UI (badge should disappear)
+      ref.invalidate(notificationsProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final notificationsAsync = ref.watch(notificationsProvider);
 
     return Scaffold(
@@ -75,12 +93,22 @@ class _NotificationCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       onTap: () async {
+        // Mark as read if needed
         if (!notification.isRead) {
-          // Optimistic update or just call API and refresh
           await ref
               .read(userRepositoryProvider)
               .markNotificationRead(notification.id);
           ref.invalidate(notificationsProvider);
+        }
+
+        if (context.mounted) {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) =>
+                NotificationDetailModal(notification: notification),
+          );
         }
       },
       child: Container(

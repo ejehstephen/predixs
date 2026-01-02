@@ -24,10 +24,24 @@ dependencies:
   smooth_page_indicator: ^2.0.1
   supabase_flutter: ^2.10.3
   url_launcher: ^6.3.2
+  flutter_paystack:
+    path: ./packages/flutter_paystack
+  webview_flutter: ^4.13.0
+
+dependency_overrides:
+  intl: ^0.20.2
+  http: ^1.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: "^0.14.3"
+  
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
 
 flutter:
   uses-material-design: true

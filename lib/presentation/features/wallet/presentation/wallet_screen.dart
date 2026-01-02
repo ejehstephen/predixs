@@ -6,7 +6,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../providers/wallet_providers.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/services/paystack_service.dart';
 import '../../../../core/extensions/exception_extension.dart';
+import 'widgets/withdrawal_modal.dart';
 
 class WalletScreen extends ConsumerWidget {
   const WalletScreen({super.key});
@@ -159,7 +162,15 @@ class WalletScreen extends ConsumerWidget {
                       const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     final tx = txs[index];
-                    final isPositive = tx.amount > 0;
+                    // If it's a withdrawal, we treat it as negative for display, even if DB stores it as positive
+                    final isDebit =
+                        tx.type == 'withdraw_debit' || tx.type == 'buy_shares';
+                    final isPositive = !isDebit && tx.amount > 0;
+
+                    // Display amount logic
+                    final displayAmount = isDebit
+                        ? -tx.amount.abs()
+                        : tx.amount;
                     return Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -200,7 +211,7 @@ class WalletScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  tx.type.toUpperCase(),
+                                  _formatTransactionType(tx.type),
                                   style: GoogleFonts.inter(
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.textPrimary,
@@ -220,24 +231,24 @@ class WalletScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '${isPositive ? '+' : ''}₦${tx.amount.abs().toStringAsFixed(0)}',
+                                '${isPositive ? '+' : '-'}₦${displayAmount.abs().toStringAsFixed(0)}',
                                 style: GoogleFonts.outfit(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                   color: isPositive
                                       ? AppColors.success
-                                      : AppColors.textPrimary,
+                                      : AppColors
+                                            .textPrimary, // Debit is black or maybe red? User screenshot had green. Let's make debit Red?
+                                  // Actually, standard is usually Black for debit, Green for credit.
+                                  // Or Red for debit. Let's stick to textPrimary (Black/Dark) for debit for now to be safe, or Error (Red).
+                                  // Existing code used textPrimary for non-positive.
                                 ),
                               ),
                               Text(
-                                tx.status,
+                                _formatTransactionStatus(tx.status),
                                 style: GoogleFonts.inter(
                                   fontSize: 10,
-                                  color: tx.status == 'completed'
-                                      ? AppColors.success
-                                      : tx.status == 'pending'
-                                      ? AppColors.warning
-                                      : AppColors.error,
+                                  color: _getStatusColor(tx.status),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -269,25 +280,77 @@ class WalletScreen extends ConsumerWidget {
 
     try {
       if (isDeposit) {
-        await ref.read(walletRepositoryProvider).deposit(amount);
+        // --- PAYSTACK INTEGRATION ---
+        final user = Supabase.instance.client.auth.currentUser;
+        final email = user?.email ?? 'customer@predixs.com';
+
+        // simple unique reference
+        final reference = 'Dep_${DateTime.now().millisecondsSinceEpoch}';
+
+        final response = await PaystackService().chargeCard(
+          context: context,
+          amount: amount,
+          email: email,
+          reference: reference,
+        );
+
+        if (response != null && response.status) {
+          // Payment Successful on Paystack Gateway
+          // Now verify/credit on Backend (Simulated here by calling repository direct)
+          // In production, you should verify the reference on backend before crediting.
+          await ref.read(walletRepositoryProvider).deposit(amount);
+
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Payment Successful: Ref ${response.reference}'),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          }
+        } else {
+          // Payment Failed or Cancelled
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Payment Cancelled or Failed: ${response?.message ?? "Unknown"}',
+                ),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+          return; // Do not refresh balance if failed
+        }
       } else {
-        await ref.read(walletRepositoryProvider).withdraw(amount);
+        // --- WITHDRAWAL (AUTOMATED) ---
+        final result = await showModalBottomSheet<bool>(
+          context: context,
+          isScrollControlled: true, // Allow full height for keyboard
+          backgroundColor: Colors.transparent,
+          builder: (context) => const WithdrawalModal(),
+        );
+
+        if (result == true) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Withdrawal Initiated Successfully! Funds will reflect shortly.',
+                ),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          }
+        } else {
+          // Cancelled or dismissed
+          return;
+        }
       }
 
-      // Refresh data
+      // Refresh data (Works for both Deposit and Withdraw success)
       ref.invalidate(walletBalanceProvider);
       ref.invalidate(walletTransactionsProvider);
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${isDeposit ? "Deposit" : "Withdrawal"} successful!',
-            ),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -336,5 +399,56 @@ class WalletScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String _formatTransactionType(String type) {
+    switch (type.toLowerCase()) {
+      case 'withdraw_debit':
+        return 'Withdrawal';
+      case 'deposit':
+        return 'Deposit';
+      case 'refund':
+        return 'Refund';
+      default:
+        return type.toUpperCase().replaceAll('_', ' ');
+    }
+  }
+
+  String _formatTransactionStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'processing':
+        return 'Pending';
+      case 'pending_manual':
+        return 'Under Review';
+      case 'completed':
+      case 'success':
+        return 'Successful';
+      case 'failed':
+        return 'Failed';
+      default:
+        return status.capitalize();
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+      case 'success':
+        return AppColors.success;
+      case 'processing':
+      case 'pending':
+      case 'pending_manual':
+        return AppColors.warning;
+      case 'failed':
+        return AppColors.error;
+      default:
+        return AppColors.textSecondary;
+    }
+  }
+}
+
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

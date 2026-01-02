@@ -6,6 +6,8 @@ class Position {
   final double shares; // Changed to double as DB uses numeric
   final double avgPrice;
   final double currentPrice;
+  final DateTime marketEndTime;
+  final bool isMarketResolved;
 
   Position({
     required this.id,
@@ -15,6 +17,8 @@ class Position {
     required this.shares,
     required this.avgPrice,
     required this.currentPrice,
+    required this.marketEndTime,
+    required this.isMarketResolved,
   });
 
   factory Position.fromJson(Map<String, dynamic> json) {
@@ -30,6 +34,11 @@ class Position {
         ? (market['yes_price'] as num).toDouble()
         : (market['no_price'] as num).toDouble();
 
+    final endTime =
+        DateTime.tryParse(market['end_date']?.toString() ?? '') ??
+        DateTime.now().add(const Duration(days: 1));
+    final isResolved = (market['is_resolved'] as bool? ?? false);
+
     return Position(
       id: json['id'],
       marketId: json['market_id'],
@@ -38,6 +47,8 @@ class Position {
       shares: shares,
       avgPrice: avgPrice,
       currentPrice: currentPrice,
+      marketEndTime: endTime,
+      isMarketResolved: isResolved,
     );
   }
 

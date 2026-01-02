@@ -64,6 +64,8 @@ final portfolioPositionsProvider = Provider<AsyncValue<List<Position>>>((ref) {
                 shares: shares,
                 avgPrice: avgPrice,
                 currentPrice: side == 'Yes' ? market.yesPrice : market.noPrice,
+                marketEndTime: market.endTime,
+                isMarketResolved: market.status == 'resolved',
               ),
             );
           }
@@ -110,5 +112,22 @@ final totalPortfolioValueProvider = Provider.autoDispose<AsyncValue<double>>((
     ),
     loading: () => const AsyncValue.loading(),
     error: (e, s) => AsyncValue.error(e, s),
+  );
+});
+final portfolioTotalProfitProvider = Provider.autoDispose<AsyncValue<double>>((
+  ref,
+) {
+  final positions = ref.watch(portfolioPositionsProvider);
+  return positions.whenData(
+    (list) => list.fold(0.0, (sum, p) => sum + (p.pnl > 0 ? p.pnl : 0)),
+  );
+});
+
+final portfolioTotalLossProvider = Provider.autoDispose<AsyncValue<double>>((
+  ref,
+) {
+  final positions = ref.watch(portfolioPositionsProvider);
+  return positions.whenData(
+    (list) => list.fold(0.0, (sum, p) => sum + (p.pnl < 0 ? p.pnl : 0)),
   );
 });

@@ -1,0 +1,45 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "predixs",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "predixs (profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "predixs (release mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "flutter_paystack",
+            "cwd": "packages\\flutter_paystack",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "flutter_paystack (profile mode)",
+            "cwd": "packages\\flutter_paystack",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "flutter_paystack (release mode)",
+            "cwd": "packages\\flutter_paystack",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}

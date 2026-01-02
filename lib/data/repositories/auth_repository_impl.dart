@@ -59,4 +59,10 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> sendPasswordResetEmail(String email) async {
     await _supabaseClient.auth.resetPasswordForEmail(email);
   }
+
+  @override
+  Future<void> deleteAccount() async {
+    await _supabaseClient.rpc('delete_own_account');
+    await signOut(); // Ensure local session is cleared
+  }
 }

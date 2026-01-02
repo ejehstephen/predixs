@@ -142,6 +142,7 @@ declare
   v_pos_shares numeric;
   v_pos_invested numeric;
   v_is_resolved boolean;
+  v_end_date timestamp with time zone;
 begin
   if p_amount <= 0 then raise exception 'Amount must be positive'; end if;
   v_user_id := auth.uid();
@@ -152,11 +153,12 @@ begin
   if v_balance < p_amount then raise exception 'Insufficient funds'; end if;
 
   -- 2. Lock Market & Get State
-  select liquidity_b, yes_shares, no_shares, is_resolved into v_b, v_q_yes, v_q_no, v_is_resolved
+  select liquidity_b, yes_shares, no_shares, is_resolved, end_date into v_b, v_q_yes, v_q_no, v_is_resolved, v_end_date
   from public.markets where id = p_market_id for update;
   
   if v_b is null then raise exception 'Market not found'; end if;
   if v_is_resolved then raise exception 'Trading is invalid: Market is resolved'; end if; -- BLOCK TRADING
+  if now() >= v_end_date then raise exception 'Market is closed for trading'; end if; -- LOCK TRADING
 
   -- 3. Calculate LMSR Logic
   -- Cost_New = Cost_Old + Amount
@@ -278,6 +280,7 @@ declare
   v_pos_shares numeric;
   
   v_is_resolved boolean;
+  v_end_date timestamp with time zone;
 begin
   if p_shares_to_sell <= 0 then raise exception 'Shares must be positive'; end if;
   v_user_id := auth.uid();
@@ -291,10 +294,11 @@ begin
   end if;
 
   -- Lock Market
-  select liquidity_b, yes_shares, no_shares, is_resolved into v_b, v_q_yes, v_q_no, v_is_resolved
+  select liquidity_b, yes_shares, no_shares, is_resolved, end_date into v_b, v_q_yes, v_q_no, v_is_resolved, v_end_date
   from public.markets where id = p_market_id for update;
 
   if v_is_resolved then raise exception 'Trading is invalid: Market is resolved'; end if; -- BLOCK TRADING
+  if now() >= v_end_date then raise exception 'Market is closed for trading'; end if; -- LOCK TRADING
 
   -- LMSR Sell Logic
   v_cost_old := calculate_lmsr_cost(v_q_yes, v_q_no, v_b);

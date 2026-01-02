@@ -104,68 +104,94 @@ class _MarketsScreenState extends ConsumerState<MarketsScreen> {
 
           const SizedBox(height: 16),
 
-          // Market List
           Expanded(
-            child: ref
-                .watch(marketListProvider)
-                .when(
-                  data: (allMarkets) {
-                    final markets = allMarkets.where((m) {
-                      final matchesCategory =
-                          selectedCategory == 'All' ||
-                          m.category == selectedCategory;
-                      final matchesSearch = m.title.toLowerCase().contains(
-                        _searchQuery.toLowerCase(),
-                      );
-                      return matchesCategory && matchesSearch;
-                    }).toList();
+            child: RefreshIndicator(
+              onRefresh: () async {
+                return ref.refresh(marketListProvider.future);
+              },
+              color: AppColors.primary,
+              child: ref
+                  .watch(marketListProvider)
+                  .when(
+                    data: (allMarkets) {
+                      final markets = allMarkets.where((m) {
+                        final matchesCategory =
+                            selectedCategory == 'All' ||
+                            m.category == selectedCategory;
+                        final matchesSearch = m.title.toLowerCase().contains(
+                          _searchQuery.toLowerCase(),
+                        );
+                        return matchesCategory && matchesSearch;
+                      }).toList();
 
-                    if (markets.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.search_off,
-                              size: 64,
-                              color: AppColors.textHint,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No markets found',
-                              style: GoogleFonts.inter(
-                                color: AppColors.textSecondary,
-                                fontSize: 16,
+                      if (markets.isEmpty) {
+                        return LayoutBuilder(
+                          builder: (context, constraints) =>
+                              SingleChildScrollView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                child: SizedBox(
+                                  height: constraints.maxHeight,
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.search_off,
+                                          size: 64,
+                                          color: AppColors.textHint,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'No markets found',
+                                          style: GoogleFonts.inter(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
+                        );
+                      }
 
-                    return ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: markets.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 16),
-                      itemBuilder: (context, index) {
-                        return MarketCard(market: markets[index])
-                            .animate()
-                            .fadeIn(duration: 300.ms)
-                            .moveY(begin: 20, end: 0);
-                      },
-                    );
-                  },
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  ),
-                  error: (error, stack) => Center(
-                    child: Text(
-                      'Error loading markets',
-                      style: GoogleFonts.inter(color: AppColors.error),
+                      return ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(16),
+                        itemCount: markets.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          return MarketCard(market: markets[index])
+                              .animate()
+                              .fadeIn(duration: 300.ms)
+                              .moveY(begin: 20, end: 0);
+                        },
+                      );
+                    },
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    error: (error, stack) => LayoutBuilder(
+                      builder: (context, constraints) => SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: SizedBox(
+                          height: constraints.maxHeight,
+                          child: Center(
+                            child: Text(
+                              'Error loading markets',
+                              style: GoogleFonts.inter(color: AppColors.error),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+            ),
           ),
         ],
       ),

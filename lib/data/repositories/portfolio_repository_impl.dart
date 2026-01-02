@@ -32,6 +32,10 @@ class PortfolioRepositoryImpl implements PortfolioRepository {
         final side = row['side'] as String; // 'Yes' or 'No'
         final shares = (row['shares'] as num).toDouble();
         final avgPrice = (row['avg_price'] as num).toDouble();
+        final endTime =
+            DateTime.tryParse(market['end_date']?.toString() ?? '') ??
+            DateTime.now().add(const Duration(days: 1));
+        final isResolved = (market['is_resolved'] as bool? ?? false);
 
         if (shares <= 0) continue;
 
@@ -45,6 +49,8 @@ class PortfolioRepositoryImpl implements PortfolioRepository {
             avgPrice: avgPrice,
             // Determine current market price based on side held
             currentPrice: side == 'Yes' ? yesPrice : noPrice,
+            marketEndTime: endTime,
+            isMarketResolved: isResolved,
           ),
         );
       }

@@ -16,14 +16,11 @@ class PortfolioScreen extends ConsumerWidget {
     // Watch all necessary providers
     final positionsAsync = ref.watch(portfolioPositionsProvider);
     final totalValueAsync = ref.watch(totalPortfolioValueProvider);
-    final investedAsync = ref.watch(portfolioInvestedProvider);
     final currentValueAsync = ref.watch(portfolioCurrentValueProvider);
+    final walletBalanceAsync = ref.watch(walletBalanceProvider);
 
-    // Calculate PnL from AsyncValues if available, else 0
-    final invested = investedAsync.asData?.value ?? 0.0;
-    final currentVal = currentValueAsync.asData?.value ?? 0.0;
-    final pnl = currentVal - invested;
-    final pnlPercent = invested == 0 ? 0.0 : (pnl / invested) * 100;
+    final totalProfitAsync = ref.watch(portfolioTotalProfitProvider);
+    final totalLossAsync = ref.watch(portfolioTotalLossProvider);
 
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
@@ -49,16 +46,20 @@ class PortfolioScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Portfolio Summary Card
+              // 1. Net Worth Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  gradient: const LinearGradient(
+                    colors: [AppColors.textPrimary, Color(0xFF2C3E50)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: AppColors.textPrimary.withOpacity(0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -67,9 +68,9 @@ class PortfolioScreen extends ConsumerWidget {
                 child: Column(
                   children: [
                     Text(
-                      'Total Portfolio Value (Cash + Assets)',
+                      'Total Net Worth',
                       style: GoogleFonts.inter(
-                        color: AppColors.textSecondary,
+                        color: Colors.white70,
                         fontSize: 14,
                       ),
                     ),
@@ -78,52 +79,97 @@ class PortfolioScreen extends ConsumerWidget {
                       data: (val) => Text(
                         '₦${val.toStringAsFixed(2)}',
                         style: GoogleFonts.outfit(
-                          color: AppColors.textPrimary,
-                          fontSize: 32,
+                          color: Colors.white,
+                          fontSize: 36,
                           fontWeight: FontWeight.bold,
                         ),
                       ).animate().scale(),
                       loading: () => const SizedBox(
                         height: 48,
-                        child: Center(child: CircularProgressIndicator()),
+                        child: Center(
+                          child: CircularProgressIndicator(color: Colors.white),
+                        ),
                       ),
                       error: (e, _) => Text(
                         'Error',
-                        style: GoogleFonts.outfit(color: AppColors.error),
+                        style: GoogleFonts.outfit(color: Colors.white),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _SummaryItem(
-                            label: 'Invested',
-                            value: '₦${invested.toStringAsFixed(0)}',
-                          ),
-                        ),
-                        Container(
-                          height: 40,
-                          width: 1,
-                          color: Colors.grey.shade200,
-                        ),
-                        Expanded(
-                          child: _SummaryItem(
-                            label: 'Total P/L',
-                            value:
-                                '${pnl >= 0 ? '+' : ''}₦${pnl.toStringAsFixed(0)}',
-                            valueColor: pnl >= 0
-                                ? AppColors.success
-                                : AppColors.error,
-                            subValue: '${pnlPercent.toStringAsFixed(1)}%',
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+
+              // 2. Breakdown Grid
+              Row(
+                children: [
+                  // Cash Card
+                  Expanded(
+                    child: _InfoCard(
+                      label: 'Cash Balance',
+                      value: walletBalanceAsync.when(
+                        data: (v) => '₦${v.toStringAsFixed(2)}',
+                        loading: () => '...',
+                        error: (_, __) => 'Error',
+                      ),
+                      icon: Icons.account_balance_wallet_outlined,
+                      iconColor: Colors.blueAccent,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Asset Card
+                  Expanded(
+                    child: _InfoCard(
+                      label: 'Asset Value',
+                      value: currentValueAsync.when(
+                        data: (v) => '₦${v.toStringAsFixed(2)}',
+                        loading: () => '...',
+                        error: (_, __) => 'Error',
+                      ),
+                      icon: Icons.pie_chart_outline,
+                      iconColor: Colors.purpleAccent,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  // Profit Card
+                  Expanded(
+                    child: _InfoCard(
+                      label: 'Total Profit',
+                      value: totalProfitAsync.when(
+                        data: (v) => '+₦${v.toStringAsFixed(2)}',
+                        loading: () => '...',
+                        error: (_, __) => 'Error',
+                      ),
+                      icon: Icons.trending_up,
+                      iconColor: AppColors.success,
+                      valueColor: AppColors.success,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Loss Card
+                  Expanded(
+                    child: _InfoCard(
+                      label: 'Total Loss',
+                      value: totalLossAsync.when(
+                        data: (v) =>
+                            '₦${v.toStringAsFixed(2)}', // v is naturally negative
+                        loading: () => '...',
+                        error: (_, __) => 'Error',
+                      ),
+                      icon: Icons.trending_down,
+                      iconColor: AppColors.error,
+                      valueColor: AppColors.error,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 32),
 
               Align(
                 alignment: Alignment.centerLeft,
@@ -178,49 +224,69 @@ class PortfolioScreen extends ConsumerWidget {
   }
 }
 
-class _SummaryItem extends StatelessWidget {
+class _InfoCard extends StatelessWidget {
   final String label;
   final String value;
+  final IconData icon;
+  final Color iconColor;
   final Color? valueColor;
-  final String? subValue;
 
-  const _SummaryItem({
+  const _InfoCard({
     required this.label,
     required this.value,
+    required this.icon,
+    required this.iconColor,
     this.valueColor,
-    this.subValue,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            color: AppColors.textSecondary,
-            fontSize: 12,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: GoogleFonts.outfit(
-            color: valueColor ?? AppColors.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
           ),
-        ),
-        if (subValue != null)
+          const SizedBox(height: 12),
           Text(
-            subValue!,
+            label,
             style: GoogleFonts.inter(
-              color: valueColor ?? AppColors.textSecondary,
+              color: AppColors.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
-      ],
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: GoogleFonts.outfit(
+              color: valueColor ?? AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -314,34 +380,73 @@ class _PositionCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => SellSharesModal(position: position),
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.error,
-                side: const BorderSide(color: AppColors.error),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          const SizedBox(height: 16),
+          if (DateTime.now().isAfter(position.marketEndTime) &&
+              !position.isMarketResolved)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: null, // Disabled
+                icon: const Icon(Icons.lock, size: 16),
+                label: const Text('Market Locked'),
+                style: ElevatedButton.styleFrom(
+                  disabledBackgroundColor: Colors.grey.shade100,
+                  disabledForegroundColor: Colors.grey,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              child: Text(
-                'Sell Position',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+            )
+          else if (position.isMarketResolved)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: null, // Disabled
+                icon: const Icon(Icons.check_circle, size: 16),
+                label: const Text('Market Resolved'),
+                style: ElevatedButton.styleFrom(
+                  disabledBackgroundColor: AppColors.success.withOpacity(0.1),
+                  disabledForegroundColor: AppColors.success,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            )
+          else
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => SellSharesModal(position: position),
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  side: const BorderSide(color: AppColors.error),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: Text(
+                  'Sell Position',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

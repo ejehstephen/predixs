@@ -86,6 +86,23 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
+  Future<void> markAllNotificationsRead() async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return;
+
+      await _client
+          .from('notifications')
+          .update({'is_read': true})
+          .eq('user_id', userId)
+          .eq('is_read', false);
+    } catch (e) {
+      // ignore: avoid_print
+      print('Error marking all notifications read: $e');
+    }
+  }
+
+  @override
   Future<void> markNotificationRead(String id) async {
     try {
       await _client

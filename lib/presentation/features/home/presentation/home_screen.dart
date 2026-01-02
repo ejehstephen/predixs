@@ -78,169 +78,178 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Balance Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primary, AppColors.secondary],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(walletBalanceProvider);
+          ref.invalidate(marketListProvider);
+          ref.invalidate(unreadNotificationCountProvider);
+        },
+        color: AppColors.primary,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Balance Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primary, AppColors.secondary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total Balance',
+                      style: GoogleFonts.inter(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    balance.when(
+                      data: (value) => Text(
+                        '₦${value.toStringAsFixed(2)}',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      loading: () => const SizedBox(
+                        height: 48,
+                        child: Center(
+                          child: CircularProgressIndicator(color: Colors.white),
+                        ),
+                      ),
+                      error: (error, stack) => Text(
+                        '₦0.00',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => context.push('/deposit'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white24,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text('Deposit'),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => context.push('/withdraw'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white10,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text('Withdraw'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+
+              const SizedBox(height: 32),
+
+              // Trending Markets Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Total Balance',
-                    style: GoogleFonts.inter(
-                      color: Colors.white70,
-                      fontSize: 14,
+                    'Trending Markets',
+                    style: GoogleFonts.outfit(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  balance.when(
-                    data: (value) => Text(
-                      '₦${value.toStringAsFixed(2)}',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    loading: () => const SizedBox(
-                      height: 48,
-                      child: Center(
-                        child: CircularProgressIndicator(color: Colors.white),
-                      ),
-                    ),
-                    error: (error, stack) => Text(
-                      '₦0.00',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => context.push('/deposit'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white24,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text('Deposit'),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => context.push('/withdraw'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white10,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text('Withdraw'),
-                        ),
-                      ),
-                    ],
+                  TextButton(
+                    onPressed: () => context.go('/markets'),
+                    child: const Text('View All'),
                   ),
                 ],
               ),
-            ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
 
-            const SizedBox(height: 32),
+              const SizedBox(height: 16),
 
-            // Trending Markets Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Trending Markets',
-                  style: GoogleFonts.outfit(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+              // Trending Markets List
+              trendingMarkets.when(
+                data: (markets) {
+                  if (markets.isEmpty) {
+                    return const Center(child: Text('No markets available'));
+                  }
+                  return ListView.separated(
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: markets.take(3).length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      final market = markets[index];
+                      return MarketCard(
+                            market: market,
+                            showVolume: false, // Use Icon for Home
+                          )
+                          .animate()
+                          .fadeIn(delay: (100 * index).ms)
+                          .moveX(begin: 30, end: 0);
+                    },
+                  );
+                },
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   ),
                 ),
-                TextButton(
-                  onPressed: () => context.go('/markets'),
-                  child: const Text('View All'),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Trending Markets List
-            trendingMarkets.when(
-              data: (markets) {
-                if (markets.isEmpty) {
-                  return const Center(child: Text('No markets available'));
-                }
-                return ListView.separated(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: markets.take(3).length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final market = markets[index];
-                    return MarketCard(
-                          market: market,
-                          showVolume: false, // Use Icon for Home
-                        )
-                        .animate()
-                        .fadeIn(delay: (100 * index).ms)
-                        .moveX(begin: 30, end: 0);
-                  },
-                );
-              },
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                ),
-              ),
-              error: (error, stack) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'Error loading markets',
-                    style: GoogleFonts.inter(color: AppColors.error),
+                error: (error, stack) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'Error loading markets',
+                      style: GoogleFonts.inter(color: AppColors.error),
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 80), // Bottom padding for navbar
-          ],
+              const SizedBox(height: 80), // Bottom padding for navbar
+            ],
+          ),
         ),
       ),
     );

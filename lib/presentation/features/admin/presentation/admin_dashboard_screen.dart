@@ -3,13 +3,17 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gap/gap.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../providers/admin_providers.dart';
 
-class AdminDashboardScreen extends StatelessWidget {
+class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final revenueAsync = ref.watch(adminTotalRevenueProvider);
+
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
@@ -27,6 +31,94 @@ class AdminDashboardScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
+          // Total Revenue Card
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF1E3A8A),
+                  Color(0xFF3B82F6),
+                ], // Specific Admin Blue
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.monetization_on_outlined,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const Gap(8),
+                    Text(
+                      'Total Platform Revenue',
+                      style: GoogleFonts.inter(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const Gap(8),
+                revenueAsync.when(
+                  data: (val) => Text(
+                    '₦${val.toStringAsFixed(2)}',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ).animate().scale(),
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  ),
+                  error: (e, _) => Text(
+                    'Error',
+                    style: GoogleFonts.inter(color: Colors.white),
+                  ),
+                ),
+                const Gap(8),
+                Text(
+                  'Collected Fees (2.0%)',
+                  style: GoogleFonts.inter(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Gap(24),
+
           _AdminActionCard(
             title: 'Create Market',
             subtitle: 'Launch a new prediction market',
@@ -49,6 +141,14 @@ class AdminDashboardScreen extends StatelessWidget {
             icon: Icons.people_outline,
             color: Colors.purpleAccent,
             onTap: () => context.push('/admin/users'),
+          ),
+          const Gap(16),
+          _AdminActionCard(
+            title: 'Manage Withdrawals',
+            subtitle: 'Process manual payouts & verify status',
+            icon: Icons.payments_rounded,
+            color: Colors.green,
+            onTap: () => context.push('/admin/withdrawals'),
           ),
         ],
       ),
