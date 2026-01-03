@@ -145,24 +145,23 @@ class PaystackService {
     required String accountName,
   }) async {
     try {
-      final response = await Supabase.instance.client.functions.invoke(
-        'paystack',
-        body: {
-          'action': 'initiate_transfer',
-          'amount': amount,
-          'bank_code': bankCode,
-          'bank_name': bankName,
-          'account_number': accountNumber,
-          'account_name': accountName,
+      // REFACTOR: Use the Database RPC directly (Manual Flow)
+      // This ensures we save the Transaction ID and link it properly for Admin approval.
+      // We skip the 'paystack' Edge Function for now because we are doing Manual Payouts.
+      
+      await Supabase.instance.client.rpc(
+        'withdraw_funds',
+        params: {
+          'p_amount': amount,
+          'p_bank_name': bankName,
+          'p_account_number': accountNumber,
+          'p_account_name': accountName,
         },
       );
+      
+      // If RPC succeeds (void), we are good.
+      // (If it fails, it throws, caught below)
 
-      final data = response.data;
-      if (data != null && data['success'] != true) {
-        throw Exception(data['message'] ?? 'Transfer Failed');
-      }
-
-      // If we got here, it's a success (or thrown by invoke for 400)
     } catch (e) {
       debugPrint("Withdraw Error: $e");
       rethrow;

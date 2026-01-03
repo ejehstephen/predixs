@@ -189,9 +189,12 @@ class WalletScreen extends ConsumerWidget {
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
                               color:
-                                  (isPositive
+                                  ((tx.status == 'completed' ||
+                                              tx.status == 'success')
                                           ? AppColors.success
-                                          : AppColors.error)
+                                          : (isPositive
+                                                ? AppColors.success
+                                                : AppColors.error))
                                       .withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
@@ -199,9 +202,13 @@ class WalletScreen extends ConsumerWidget {
                               isPositive
                                   ? Icons.arrow_downward
                                   : Icons.arrow_upward,
-                              color: isPositive
+                              color:
+                                  (tx.status == 'completed' ||
+                                      tx.status == 'success')
                                   ? AppColors.success
-                                  : AppColors.error,
+                                  : (isPositive
+                                        ? AppColors.success
+                                        : AppColors.error),
                               size: 20,
                             ),
                           ),

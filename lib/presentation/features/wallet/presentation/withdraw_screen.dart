@@ -14,8 +14,9 @@ class WithdrawScreen extends ConsumerStatefulWidget {
 
 class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
   final _amountController = TextEditingController();
-  final _accountController = TextEditingController();
+  final _accountController = TextEditingController(); // Account Number
   final _bankController = TextEditingController();
+  final _accountNameController = TextEditingController(); // Account Name
   bool _isLoading = false;
 
   Future<void> _handleWithdraw() async {
@@ -27,9 +28,11 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
       return;
     }
 
-    if (_accountController.text.isEmpty || _bankController.text.isEmpty) {
+    if (_accountController.text.isEmpty ||
+        _bankController.text.isEmpty ||
+        _accountNameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter bank details')),
+        const SnackBar(content: Text('Please enter all bank details')),
       );
       return;
     }
@@ -37,7 +40,14 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(walletRepositoryProvider).withdraw(amount);
+      await ref
+          .read(walletRepositoryProvider)
+          .withdraw(
+            amount,
+            bankName: _bankController.text.trim(),
+            accountNumber: _accountController.text.trim(),
+            accountName: _accountNameController.text.trim(),
+          );
 
       // Refresh wallet data
       ref.invalidate(walletBalanceProvider);
@@ -73,6 +83,7 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
     _amountController.dispose();
     _accountController.dispose();
     _bankController.dispose();
+    _accountNameController.dispose();
     super.dispose();
   }
 
@@ -94,104 +105,120 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Amount to Withdraw',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _amountController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    style: GoogleFonts.outfit(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                    decoration: InputDecoration(
-                      prefixText: '₦ ',
-                      border: InputBorder.none,
-                      hintText: '0.00',
-                      hintStyle: TextStyle(color: AppColors.textHint),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            TextField(
-              controller: _accountController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white,
-                hintText: 'Account Number',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
                 ),
-                contentPadding: const EdgeInsets.all(20),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _bankController,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white,
-                hintText: 'Bank Name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.all(20),
-              ),
-            ),
-            const Spacer(),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _handleWithdraw,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 56),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Text(
-                      'Withdraw Funds',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Amount to Withdraw',
                       style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
                       ),
                     ),
-            ),
-          ],
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _amountController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      style: GoogleFonts.outfit(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        prefixText: '₦ ',
+                        border: InputBorder.none,
+                        hintText: '0.00',
+                        hintStyle: TextStyle(color: AppColors.textHint),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              TextField(
+                controller: _accountController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  hintText: 'Account Number',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.all(20),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _accountNameController,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  hintText: 'Account Name',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.all(20),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _bankController,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  hintText: 'Bank Name',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.all(20),
+                ),
+              ),
+              const SizedBox(height: 32), // Spacer/Margin
+              ElevatedButton(
+                onPressed: _isLoading ? null : _handleWithdraw,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'Withdraw Funds',
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );

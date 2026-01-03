@@ -53,9 +53,22 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   @override
-  Future<void> withdraw(double amount) async {
+  Future<void> withdraw(
+    double amount, {
+    required String bankName,
+    required String accountNumber,
+    required String accountName,
+  }) async {
     try {
-      await _client.rpc('withdraw_funds', params: {'p_amount': amount});
+      await _client.rpc(
+        'withdraw_funds',
+        params: {
+          'p_amount': amount,
+          'p_bank_name': bankName,
+          'p_account_number': accountNumber,
+          'p_account_name': accountName,
+        },
+      );
     } catch (e) {
       throw Exception('Failed to withdraw: $e');
     }

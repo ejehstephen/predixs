@@ -28,11 +28,34 @@ Future<void> main() async {
   );
 }
 
-class PredixApp extends ConsumerWidget {
+class PredixApp extends ConsumerStatefulWidget {
   const PredixApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PredixApp> createState() => _PredixAppState();
+}
+
+class _PredixAppState extends ConsumerState<PredixApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Listen for Password Recovery Event
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
+      final event = data.event;
+      print("AUTH EVENT: $event"); // Debug Log
+      if (event == AuthChangeEvent.passwordRecovery) {
+        print("PASSWORD RECOVERY DETECTED - NAVIGATING");
+        // Convert to async to allow small delay if needed for router init
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          ref.read(goRouterProvider).go('/update-password');
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(goRouterProvider);
 
     return MaterialApp.router(

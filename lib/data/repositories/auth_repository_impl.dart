@@ -57,7 +57,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> sendPasswordResetEmail(String email) async {
-    await _supabaseClient.auth.resetPasswordForEmail(email);
+    await _supabaseClient.auth.resetPasswordForEmail(
+      email,
+      redirectTo: 'io.supabase.predixs://login-callback/',
+    );
   }
 
   @override

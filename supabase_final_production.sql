@@ -1,0 +1,75 @@
+-- FINAL PRODUCTION FIX
+-- This removes the "NUCLEAR DEBUG" exception and enables the working logic.
+
+create or replace function withdraw_funds(
+    p_amount numeric,
+    p_bank_name text default 'Unknown',
+    p_account_number text default 'Unknown',
+    p_account_name text default 'Unknown'
+)
+returns void
+language plpgsql
+security definer
+as $$
+declare
+  v_user_id uuid;
+  v_current_balance numeric;
+  v_new_tx_id uuid;
+begin
+  v_user_id := auth.uid();
+  if v_user_id is null then raise exception 'Not authenticated'; end if;
+
+  if p_amount <= 0 then raise exception 'Amount must be positive'; end if;
+
+  -- Check balance
+  select balance into v_current_balance
+  from public.wallets
+  where user_id = v_user_id;
+
+  if v_current_balance < p_amount then
+    raise exception 'Insufficient funds';
+  end if;
+
+  -- 1. Deduct Balance Immediately
+  update public.wallets
+  set balance = balance - p_amount,
+      updated_at = now()
+  where user_id = v_user_id;
+
+  -- 2. Create Transaction Record (PENDING)
+  insert into public.transactions (user_id, type, amount, status, metadata)
+  values (
+    v_user_id,
+    'withdraw_debit',  
+    -p_amount,         
+    'pending',         
+    json_build_object(
+        'bank_name', p_bank_name,
+        'account_number', p_account_number,
+        'account_name', p_account_name,
+        'method', 'manual_withdrawal'
+    )
+  ) returning id into v_new_tx_id;
+
+  -- 3. Create Withdrawal Request (LINKED to Transaction)
+  insert into public.withdraw_requests (
+      user_id, 
+      amount, 
+      status, 
+      bank_name, 
+      account_number, 
+      account_name, 
+      transaction_id -- <--- CRITICAL: SAVING THE LINK
+  )
+  values (
+      v_user_id, 
+      p_amount, 
+      'processing', 
+      p_bank_name, 
+      p_account_number, 
+      p_account_name, 
+      v_new_tx_id
+  );
+
+end;
+$$;

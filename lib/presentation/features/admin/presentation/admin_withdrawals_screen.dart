@@ -12,7 +12,7 @@ final pendingWithdrawalsProvider =
       final supabase = Supabase.instance.client;
       final response = await supabase
           .from('withdraw_requests')
-          .select('*')
+          .select('*, transaction_id') // Explicitly fetch this column
           .or('status.eq.manual_review,status.eq.processing')
           .order('created_at', ascending: false);
       final data = response as List<dynamic>;
@@ -99,42 +99,46 @@ class _WithdrawalCardState extends State<_WithdrawalCard> {
     try {
       final supabase = Supabase.instance.client;
       final requestId = widget.item['id'];
+      final transactionId =
+          widget.item['transaction_id']; // This is the Single Truth
+
+      print("DEBUG: Request ID: $requestId");
+      print("DEBUG: Transaction ID Linked: $transactionId"); // <--- Debug log
 
       // 1. Update Request to Success
       await supabase
           .from('withdraw_requests')
-          .update({
-            'status': 'completed',
-          }) // Changed from 'success' to 'completed'
+          .update({'status': 'completed'})
           .eq('id', requestId);
 
-      // 2. Handle Transaction Record
-      // Force Insert New Success Record (User Request: "make it send successful transaction message regardless")
-      // We attempt to clean up old pending ones if possible, but priority is sending the Success receipt.
-
-      // Optional: Try to mark old pending ones as failed/replaced to clean up UI (Best Effort)
-      try {
+      // 2. Handle Transaction Record (Option A: Update the Linked Transaction!)
+      if (transactionId != null) {
+        // Correct Model: Update the existing transaction
         await supabase
             .from('transactions')
-            .update({'status': 'replaced_by_admin'}) // or 'failed' or delete
-            .eq('user_id', widget.item['user_id'])
-            .eq('type', 'withdraw_debit')
-            .or('status.eq.processing,status.eq.pending_manual');
-      } catch (_) {
-        // Ignore cleanup errors
+            .update({
+              'status': 'completed', // Updates the specific transaction
+              'metadata': {
+                'method': 'admin_approval',
+                'original_request_id': requestId,
+                // Merge with existing metadata if needed, but this is fine
+              },
+            })
+            .eq('id', transactionId);
+      } else {
+        // Fallback for OLD records (Backwards Compatibility)
+        // Force Insert New Success Record because logic was missing before
+        await supabase.from('transactions').insert({
+          'user_id': widget.item['user_id'],
+          'type': 'withdraw_debit',
+          'amount': widget.item['amount'] as num,
+          'status': 'completed',
+          'metadata': {
+            'method': 'manual_admin_override_legacy',
+            'original_request_id': requestId,
+          },
+        });
       }
-
-      // INSERT NEW SUCCESS RECORD
-      await supabase.from('transactions').insert({
-        'user_id': widget.item['user_id'],
-        'type': 'withdraw_debit',
-        'amount': widget.item['amount'] as num,
-        'status': 'completed',
-        'metadata': {
-          'method': 'manual_admin_override',
-          'original_request_id': requestId,
-        },
-      });
 
       if (mounted) {
         ScaffoldMessenger.of(

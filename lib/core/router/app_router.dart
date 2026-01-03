@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../presentation/features/auth/presentation/login_screen.dart';
 import '../../presentation/features/auth/presentation/signup_screen.dart';
+import '../../presentation/features/auth/presentation/update_password_screen.dart';
 import '../../presentation/features/auth/presentation/otp_screen.dart';
 import '../../presentation/features/auth/providers/auth_providers.dart';
 import '../../presentation/features/home/presentation/home_screen.dart';
@@ -215,6 +216,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/notifications',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/update-password',
+        builder: (context, state) => const UpdatePasswordScreen(),
       ),
       // Admin Routes
       GoRoute(
