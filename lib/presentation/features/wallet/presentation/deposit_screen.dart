@@ -97,18 +97,18 @@ class _DepositScreenState extends ConsumerState<DepositScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Deposit',
           style: GoogleFonts.outfit(
-            color: AppColors.textPrimary,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.bold,
           ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: const BackButton(color: AppColors.textPrimary),
+        leading: BackButton(color: Theme.of(context).iconTheme.color),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -117,7 +117,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Column(
@@ -127,7 +127,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen> {
                     'Amount to Deposit',
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -139,13 +139,15 @@ class _DepositScreenState extends ConsumerState<DepositScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                     decoration: InputDecoration(
                       prefixText: '₦ ',
                       border: InputBorder.none,
                       hintText: '0.00',
-                      hintStyle: TextStyle(color: AppColors.textHint),
+                      hintStyle: TextStyle(
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
                     ),
                   ),
                 ],

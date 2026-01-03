@@ -19,14 +19,14 @@ class HomeScreen extends ConsumerWidget {
     final trendingMarkets = ref.watch(marketListProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
           'Predix',
           style: GoogleFonts.outfit(
-            color: AppColors.textPrimary,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.bold,
             fontSize: 24,
           ),
@@ -36,9 +36,9 @@ class HomeScreen extends ConsumerWidget {
             children: [
               IconButton(
                 onPressed: () => context.push('/notifications'),
-                icon: const Icon(
+                icon: Icon(
                   Icons.notifications_outlined,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).iconTheme.color,
                 ),
               ),
               Consumer(
@@ -96,8 +96,13 @@ class HomeScreen extends ConsumerWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, AppColors.secondary],
+                  gradient: LinearGradient(
+                    colors: Theme.of(context).brightness == Brightness.dark
+                        ? [
+                            const Color(0xFF1A1C30),
+                            const Color(0xFF0F1120),
+                          ] // Darker Navy
+                        : [AppColors.primary, AppColors.secondary],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -162,21 +167,6 @@ class HomeScreen extends ConsumerWidget {
                             child: const Text('Deposit'),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => context.push('/withdraw'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white10,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text('Withdraw'),
-                          ),
-                        ),
                       ],
                     ),
                   ],
@@ -194,7 +184,7 @@ class HomeScreen extends ConsumerWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   TextButton(

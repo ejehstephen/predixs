@@ -74,8 +74,8 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
         left: 24,
         right: 24,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Form(
@@ -100,7 +100,7 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
               style: GoogleFonts.outfit(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             const SizedBox(height: 8),
@@ -108,7 +108,7 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
               'Verify your identity with your Phone Number and NIN.',
               style: GoogleFonts.inter(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
             ),
             const SizedBox(height: 24),
@@ -119,14 +119,14 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
                 labelText: 'Phone Number',
                 hintText: '+234...',
                 filled: true,
-                fillColor: AppColors.background,
+                fillColor: Theme.of(context).scaffoldBackgroundColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.phone_outlined,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).iconTheme.color,
                 ),
               ),
               validator: (value) {
@@ -146,14 +146,14 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
                 hintText: '12345678901',
                 counterText: '', // Hide counter
                 filled: true,
-                fillColor: AppColors.background,
+                fillColor: Theme.of(context).scaffoldBackgroundColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.badge_outlined,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).iconTheme.color,
                 ),
               ),
               validator: (value) {

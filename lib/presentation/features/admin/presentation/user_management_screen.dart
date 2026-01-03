@@ -18,18 +18,18 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     final usersAsync = ref.watch(allUsersProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'User Management',
           style: GoogleFonts.outfit(
-            color: AppColors.textPrimary,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.bold,
           ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: const BackButton(color: AppColors.textPrimary),
+        leading: BackButton(color: Theme.of(context).iconTheme.color),
       ),
       body: usersAsync.when(
         data: (users) {
@@ -45,7 +45,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               return Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -76,14 +76,18 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
-                              color: AppColors.textPrimary,
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.color,
                             ),
                           ),
                           Text(
                             user.email ?? 'No Email',
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.color,
                             ),
                           ),
                         ],

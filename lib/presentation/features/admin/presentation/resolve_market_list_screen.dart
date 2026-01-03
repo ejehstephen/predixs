@@ -106,15 +106,17 @@ class _ResolveMarketListScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Resolve Markets',
-          style: GoogleFonts.outfit(color: AppColors.textPrimary),
+          style: GoogleFonts.outfit(
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: const BackButton(color: AppColors.textPrimary),
+        leading: BackButton(color: Theme.of(context).iconTheme.color),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -130,13 +132,21 @@ class _ResolveMarketListScreenState
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   child: ListTile(
                     title: Text(
                       m['title'],
-                      style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
                     ),
-                    subtitle: Text('Ends: ${m['end_date'].split('T')[0]}'),
+                    subtitle: Text(
+                      'Ends: ${m['end_date'].split('T')[0]}',
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                      ),
+                    ),
                     trailing: const Icon(Icons.gavel, color: Colors.orange),
                     onTap: () => _showResolveDialog(m),
                   ),

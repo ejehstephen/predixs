@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/theme_provider.dart';
+import '../../../../core/constants/app_colors.dart';
+
 import '../../auth/providers/auth_providers.dart';
 import '../providers/user_providers.dart';
 import '../../wallet/providers/wallet_providers.dart';
@@ -36,12 +39,12 @@ class AccountScreen extends ConsumerWidget {
     final profileAsync = ref.watch(userProfileProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Account',
           style: GoogleFonts.outfit(
-            color: AppColors.textPrimary,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -121,7 +124,7 @@ class AccountScreen extends ConsumerWidget {
                         style: GoogleFonts.outfit(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       Text(
@@ -182,7 +185,7 @@ class AccountScreen extends ConsumerWidget {
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
@@ -369,7 +372,7 @@ class _MenuOption extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: Theme.of(context).scaffoldBackgroundColor,
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: AppColors.primary, size: 20),
@@ -378,7 +381,7 @@ class _MenuOption extends StatelessWidget {
         title,
         style: GoogleFonts.inter(
           fontWeight: FontWeight.w500,
-          color: AppColors.textPrimary,
+          color: Theme.of(context).textTheme.bodyLarge?.color,
           fontSize: 16,
         ),
       ),

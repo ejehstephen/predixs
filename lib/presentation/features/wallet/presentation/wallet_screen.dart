@@ -20,12 +20,12 @@ class WalletScreen extends ConsumerWidget {
     final transactions = ref.watch(walletTransactionsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Wallet',
           style: GoogleFonts.outfit(
-            color: AppColors.textPrimary,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -44,8 +44,10 @@ class WalletScreen extends ConsumerWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primary, AppColors.secondary],
+                gradient: LinearGradient(
+                  colors: Theme.of(context).brightness == Brightness.dark
+                      ? [const Color(0xFF1A1C30), const Color(0xFF0F1120)]
+                      : [AppColors.primary, AppColors.secondary],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -142,7 +144,7 @@ class WalletScreen extends ConsumerWidget {
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ),
@@ -174,7 +176,7 @@ class WalletScreen extends ConsumerWidget {
                     return Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
@@ -221,14 +223,18 @@ class WalletScreen extends ConsumerWidget {
                                   _formatTransactionType(tx.type),
                                   style: GoogleFonts.inter(
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.textPrimary,
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge?.color,
                                   ),
                                 ),
                                 Text(
                                   DateFormat('MMM d, h:mm a').format(tx.date),
                                   style: GoogleFonts.inter(
                                     fontSize: 12,
-                                    color: AppColors.textSecondary,
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium?.color,
                                   ),
                                 ),
                               ],
@@ -244,8 +250,9 @@ class WalletScreen extends ConsumerWidget {
                                   fontSize: 16,
                                   color: isPositive
                                       ? AppColors.success
-                                      : AppColors
-                                            .textPrimary, // Debit is black or maybe red? User screenshot had green. Let's make debit Red?
+                                      : Theme.of(
+                                          context,
+                                        ).textTheme.bodyLarge?.color,
                                   // Actually, standard is usually Black for debit, Green for credit.
                                   // Or Red for debit. Let's stick to textPrimary (Black/Dark) for debit for now to be safe, or Error (Red).
                                   // Existing code used textPrimary for non-positive.

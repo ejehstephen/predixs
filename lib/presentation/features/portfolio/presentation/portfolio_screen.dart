@@ -23,14 +23,14 @@ class PortfolioScreen extends ConsumerWidget {
     final totalLossAsync = ref.watch(portfolioTotalLossProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
           'Portfolio',
           style: GoogleFonts.outfit(
-            color: AppColors.textPrimary,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -178,7 +178,7 @@ class PortfolioScreen extends ConsumerWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
               ),
@@ -244,7 +244,7 @@ class _InfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -269,7 +269,9 @@ class _InfoCard extends StatelessWidget {
           Text(
             label,
             style: GoogleFonts.inter(
-              color: AppColors.textSecondary,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[400]
+                  : AppColors.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -278,9 +280,13 @@ class _InfoCard extends StatelessWidget {
           Text(
             value,
             style: GoogleFonts.outfit(
-              color: valueColor ?? AppColors.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              color:
+                  valueColor ??
+                  (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : AppColors.textPrimary),
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -302,7 +308,7 @@ class _PositionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10),
@@ -320,7 +326,7 @@ class _PositionCard extends StatelessWidget {
                   position.marketTitle,
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -468,7 +474,7 @@ class _PositionStat extends StatelessWidget {
           label,
           style: GoogleFonts.inter(
             fontSize: 10,
-            color: AppColors.textSecondary,
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
         Text(
@@ -476,7 +482,7 @@ class _PositionStat extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
       ],

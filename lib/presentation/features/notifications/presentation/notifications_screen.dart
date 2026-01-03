@@ -33,18 +33,18 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final notificationsAsync = ref.watch(notificationsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Notifications',
           style: GoogleFonts.outfit(
-            color: AppColors.textPrimary,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.bold,
           ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: const BackButton(color: AppColors.textPrimary),
+        leading: BackButton(color: Theme.of(context).iconTheme.color),
       ),
       body: notificationsAsync.when(
         data: (notifications) {
@@ -115,8 +115,8 @@ class _NotificationCard extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: notification.isRead
-              ? Colors.white.withOpacity(0.7)
-              : Colors.white,
+              ? Theme.of(context).cardColor.withOpacity(0.7)
+              : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10),
@@ -150,7 +150,7 @@ class _NotificationCard extends ConsumerWidget {
                       fontWeight: notification.isRead
                           ? FontWeight.w600
                           : FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   const SizedBox(height: 4),

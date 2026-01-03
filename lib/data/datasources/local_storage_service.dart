@@ -16,6 +16,7 @@ class LocalStorageService {
   static const _keyProfile = 'user_profile';
   static const _keyNotifications = 'user_notifications';
   static const _keyHasSeenOnboarding = 'has_seen_onboarding';
+  static const _keyThemeMode = 'theme_mode';
 
   // Onboarding
   bool get hasSeenOnboarding => _prefs.getBool(_keyHasSeenOnboarding) ?? false;
@@ -56,6 +57,13 @@ class LocalStorageService {
     } catch (e) {
       return [];
     }
+  }
+
+  // Theme
+  String? getThemeMode() => _prefs.getString(_keyThemeMode);
+
+  Future<void> saveThemeMode(String mode) async {
+    await _prefs.setString(_keyThemeMode, mode);
   }
 
   Future<void> clear() async {

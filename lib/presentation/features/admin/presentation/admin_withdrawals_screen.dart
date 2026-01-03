@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_colors.dart';
 
 // --- Provider ---
 final pendingWithdrawalsProvider =
@@ -27,15 +26,17 @@ class AdminWithdrawalsScreen extends ConsumerWidget {
     final withdrawalsAsync = ref.watch(pendingWithdrawalsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Pending Withdrawals',
-          style: GoogleFonts.outfit(color: AppColors.textPrimary),
+          style: GoogleFonts.outfit(
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: Theme.of(context).iconTheme.color),
       ),
       body: withdrawalsAsync.when(
         data: (withdrawals) {
@@ -54,7 +55,7 @@ class AdminWithdrawalsScreen extends ConsumerWidget {
                     "All caught up!",
                     style: GoogleFonts.outfit(
                       fontSize: 18,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                 ],
@@ -206,7 +207,7 @@ class _WithdrawalCardState extends State<_WithdrawalCard> {
     final date = DateTime.parse(widget.item['created_at']);
 
     return Card(
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -221,7 +222,7 @@ class _WithdrawalCardState extends State<_WithdrawalCard> {
                   style: GoogleFonts.outfit(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 Builder(
@@ -265,11 +266,14 @@ class _WithdrawalCardState extends State<_WithdrawalCard> {
               style: GoogleFonts.outfit(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             Text(
               '$bankName - $accNum',
-              style: GoogleFonts.inter(color: AppColors.textSecondary),
+              style: GoogleFonts.inter(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
             ),
             const Gap(4),
             Text(

@@ -226,9 +226,9 @@ class _WithdrawalModalState extends State<WithdrawalModal> {
             MediaQuery.of(context).viewInsets.bottom + 24, // Keyboard padding
       ),
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -242,6 +242,7 @@ class _WithdrawalModalState extends State<WithdrawalModal> {
                 style: GoogleFonts.outfit(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
               if (_isLoading)
@@ -257,17 +258,30 @@ class _WithdrawalModalState extends State<WithdrawalModal> {
           // Bank Select
           DropdownButtonFormField<String>(
             value: _selectedBankCode,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Select Bank',
-              border: OutlineInputBorder(),
+              labelStyle: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+              border: const OutlineInputBorder(),
               isDense: true,
+            ),
+            dropdownColor: Theme.of(context).cardColor,
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
             items: _banks.map((b) {
               return DropdownMenuItem<String>(
                 value: b['code'] as String,
                 child: SizedBox(
                   width: 250,
-                  child: Text(b['name'], overflow: TextOverflow.ellipsis),
+                  child: Text(
+                    b['name'],
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
+                  ),
                 ),
                 onTap: () {
                   _selectedBankName = b['name'];
@@ -283,8 +297,18 @@ class _WithdrawalModalState extends State<WithdrawalModal> {
               _onAccountChanged();
             },
             hint: _banksLoading
-                ? const Text("Loading banks...")
-                : const Text("Choose Bank"),
+                ? Text(
+                    "Loading banks...",
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
+                  )
+                : Text(
+                    "Choose Bank",
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
+                  ),
           ),
 
           const SizedBox(height: 16),
@@ -296,8 +320,14 @@ class _WithdrawalModalState extends State<WithdrawalModal> {
             maxLength: 10,
             decoration: InputDecoration(
               labelText: 'Account Number',
+              labelStyle: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
               border: const OutlineInputBorder(),
               counterText: "",
+              hintStyle: TextStyle(
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
               suffixIcon: _isResolving
                   ? const Padding(
                       padding: EdgeInsets.all(12),
@@ -328,9 +358,15 @@ class _WithdrawalModalState extends State<WithdrawalModal> {
           TextField(
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Amount to Withdraw (₦)',
-              border: OutlineInputBorder(),
+              labelStyle: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+              border: const OutlineInputBorder(),
+              prefixStyle: TextStyle(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
               prefixText: '₦ ',
             ),
           ),

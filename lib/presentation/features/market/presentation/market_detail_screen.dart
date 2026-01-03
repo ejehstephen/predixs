@@ -20,19 +20,19 @@ class MarketDetailScreen extends ConsumerWidget {
     final marketAsync = ref.watch(marketProvider(marketId));
 
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-          color: AppColors.textPrimary,
+          color: Theme.of(context).iconTheme.color,
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           'Market Detail',
           style: GoogleFonts.outfit(
-            color: AppColors.textPrimary,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -40,13 +40,13 @@ class MarketDetailScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.share_outlined),
-            color: AppColors.textPrimary,
+            color: Theme.of(context).iconTheme.color,
             onPressed: () async {
               final market = marketAsync.asData?.value;
               if (market != null) {
                 try {
                   await Share.share(
-                    'Predict now on Predixs: ${market.title} \n\n#Predixs #PredictionMarket',
+                    'Check out this trade on Predixs!\n${market.title}\n\nView Trade: io.supabase.predixs://app/market/${market.id}\n\nDon\'t have the app? Download it to start trading!',
                   );
                 } catch (e) {
                   if (context.mounted) {
@@ -196,7 +196,7 @@ class MarketDetailScreen extends ConsumerWidget {
             style: GoogleFonts.outfit(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
               height: 1.2,
             ),
           ).animate().fadeIn(delay: 100.ms).moveY(begin: 10, end: 0),
@@ -207,7 +207,7 @@ class MarketDetailScreen extends ConsumerWidget {
             height: 250,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
@@ -226,7 +226,7 @@ class MarketDetailScreen extends ConsumerWidget {
                     Text(
                       'Price History (24h)',
                       style: GoogleFonts.inter(
-                        color: AppColors.textSecondary,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -270,7 +270,7 @@ class MarketDetailScreen extends ConsumerWidget {
             style: GoogleFonts.outfit(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ).animate().fadeIn(delay: 300.ms),
           const Gap(16),
@@ -339,8 +339,8 @@ class MarketDetailScreen extends ConsumerWidget {
               isScrollControlled: true,
               builder: (context) => Container(
                 padding: const EdgeInsets.all(24).copyWith(bottom: 48),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
                 child: Column(
@@ -363,7 +363,7 @@ class MarketDetailScreen extends ConsumerWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                     const Gap(16),
@@ -372,7 +372,7 @@ class MarketDetailScreen extends ConsumerWidget {
                           'Standard market rules apply. Market resolves based on the specific outcome defined in the title/description.',
                       style: GoogleFonts.inter(
                         fontSize: 16,
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                         height: 1.5,
                       ),
                     ),
@@ -395,7 +395,7 @@ class MarketDetailScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -454,10 +454,12 @@ class MarketDetailScreen extends ConsumerWidget {
                           }
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.success,
-                      disabledBackgroundColor: AppColors.success.withOpacity(
-                        0.3,
-                      ),
+                      backgroundColor: const Color(
+                        0xFF22C55E,
+                      ), // Standard Vibrant Green
+                      disabledBackgroundColor: const Color(
+                        0xFF22C55E,
+                      ).withOpacity(0.3),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -469,6 +471,7 @@ class MarketDetailScreen extends ConsumerWidget {
                       style: GoogleFonts.outfit(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -488,8 +491,12 @@ class MarketDetailScreen extends ConsumerWidget {
                           }
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.error,
-                      disabledBackgroundColor: AppColors.error.withOpacity(0.3),
+                      backgroundColor: const Color(
+                        0xFFEF4444,
+                      ), // Standard Vibrant Red
+                      disabledBackgroundColor: const Color(
+                        0xFFEF4444,
+                      ).withOpacity(0.3),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -501,6 +508,7 @@ class MarketDetailScreen extends ConsumerWidget {
                       style: GoogleFonts.outfit(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -602,7 +610,7 @@ class _StatTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -612,7 +620,7 @@ class _StatTile extends StatelessWidget {
               Text(
                 label,
                 style: GoogleFonts.inter(
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
                   fontSize: 12,
                 ),
               ),
@@ -620,7 +628,7 @@ class _StatTile extends StatelessWidget {
               Text(
                 value,
                 style: GoogleFonts.outfit(
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
                 ),

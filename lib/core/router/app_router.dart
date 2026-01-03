@@ -245,6 +245,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
+      GoRoute(
+        path: '/market/:id',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return MarketDetailScreen(marketId: id);
+        },
+      ),
     ],
   );
 });

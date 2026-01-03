@@ -23,14 +23,14 @@ class _MarketsScreenState extends ConsumerState<MarketsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
           'Markets',
           style: GoogleFonts.outfit(
-            color: AppColors.textPrimary,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -45,9 +45,15 @@ class _MarketsScreenState extends ConsumerState<MarketsScreen> {
               onChanged: (value) => setState(() => _searchQuery = value),
               decoration: InputDecoration(
                 hintText: 'Search markets...',
-                prefixIcon: const Icon(Icons.search),
+                hintStyle: GoogleFonts.inter(
+                  color: Theme.of(context).hintColor,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Theme.of(context).iconTheme.color,
+                ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: Theme.of(context).cardColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -76,13 +82,13 @@ class _MarketsScreenState extends ConsumerState<MarketsScreen> {
                         selectedCategory = category;
                       });
                     },
-                    backgroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).cardColor,
                     selectedColor: AppColors.primary.withOpacity(0.1),
                     checkmarkColor: AppColors.primary,
                     labelStyle: GoogleFonts.inter(
                       color: isSelected
                           ? AppColors.primary
-                          : AppColors.textSecondary,
+                          : Theme.of(context).textTheme.bodyMedium?.color,
                       fontWeight: isSelected
                           ? FontWeight.w600
                           : FontWeight.normal,

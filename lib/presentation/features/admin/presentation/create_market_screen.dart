@@ -19,6 +19,9 @@ class _CreateMarketScreenState extends ConsumerState<CreateMarketScreen> {
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
   final _rulesController = TextEditingController();
+  final _liquidityController = TextEditingController(
+    text: '10000',
+  ); // Default higher liquidity
 
   String _selectedCategory = 'Sports';
   final _categories = ['Sports', 'Crypto', 'Tech', 'Politics', 'Pop Culture'];
@@ -31,6 +34,7 @@ class _CreateMarketScreenState extends ConsumerState<CreateMarketScreen> {
     _titleController.dispose();
     _descController.dispose();
     _rulesController.dispose();
+    _liquidityController.dispose();
     super.dispose();
   }
 
@@ -53,7 +57,7 @@ class _CreateMarketScreenState extends ConsumerState<CreateMarketScreen> {
         'no_price': 0.5,
         'yes_shares': 0,
         'no_shares': 0,
-        'liquidity_b': 100.0,
+        'liquidity_b': double.tryParse(_liquidityController.text) ?? 10000.0,
       };
 
       await Supabase.instance.client.from('markets').insert(marketData);
@@ -81,7 +85,7 @@ class _CreateMarketScreenState extends ConsumerState<CreateMarketScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Create Market',
@@ -113,7 +117,15 @@ class _CreateMarketScreenState extends ConsumerState<CreateMarketScreen> {
               const Gap(16),
               _buildDropdown(),
               const Gap(16),
+              const Gap(16),
               _buildDatePicker(),
+              const Gap(16),
+              _buildTextField(
+                'Initial Liquidity (₦)',
+                'e.g. 10000 (Higher = Less Volatility)',
+                _liquidityController,
+                keyboardType: TextInputType.number,
+              ),
               const Gap(16),
               _buildTextField(
                 'Rules',
@@ -133,7 +145,14 @@ class _CreateMarketScreenState extends ConsumerState<CreateMarketScreen> {
                   ),
                 ),
                 child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
                     : Text(
                         'Launch Market',
                         style: GoogleFonts.outfit(
@@ -154,6 +173,7 @@ class _CreateMarketScreenState extends ConsumerState<CreateMarketScreen> {
     String hint,
     TextEditingController controller, {
     int maxLines = 1,
+    TextInputType? keyboardType,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,18 +182,19 @@ class _CreateMarketScreenState extends ConsumerState<CreateMarketScreen> {
           label,
           style: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
         const Gap(8),
         TextFormField(
           controller: controller,
           maxLines: maxLines,
+          keyboardType: keyboardType,
           validator: (val) => val == null || val.isEmpty ? 'Required' : null,
           decoration: InputDecoration(
             hintText: hint,
             filled: true,
-            fillColor: Colors.white,
+            fillColor: Theme.of(context).cardColor,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -192,19 +213,23 @@ class _CreateMarketScreenState extends ConsumerState<CreateMarketScreen> {
           'Category',
           style: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
         const Gap(8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(12),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _selectedCategory,
+              dropdownColor: Theme.of(context).cardColor,
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
               isExpanded: true,
               items: _categories
                   .map((c) => DropdownMenuItem(value: c, child: Text(c)))
@@ -225,7 +250,7 @@ class _CreateMarketScreenState extends ConsumerState<CreateMarketScreen> {
           'End Date',
           style: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
         const Gap(8),
@@ -242,7 +267,7 @@ class _CreateMarketScreenState extends ConsumerState<CreateMarketScreen> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -250,11 +275,14 @@ class _CreateMarketScreenState extends ConsumerState<CreateMarketScreen> {
               children: [
                 Text(
                   _endDate.toLocal().toString().split(' ')[0],
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
                 ),
-                const Icon(
+                Icon(
                   Icons.calendar_today,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).iconTheme.color,
                 ),
               ],
             ),

@@ -27,6 +27,7 @@ dependencies:
   flutter_paystack:
     path: ./packages/flutter_paystack
   webview_flutter: ^4.13.0
+  font_awesome_flutter: ^10.12.0
 
 dependency_overrides:
   intl: ^0.20.2
