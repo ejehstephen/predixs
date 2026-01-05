@@ -1,0 +1,29 @@
+{
+    "project_info": {
+        "project_number": "383193759951",
+        "project_id": "yung-chat-b3e8c",
+        "storage_bucket": "yung-chat-b3e8c.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:383193759951:android:762aadd23129af7342b7ba",
+                "android_client_info": {
+                    "package_name": "com.example.predixs"
+                }
+            },
+            "oauth_client": [],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyBXoNRhGA9ti9x4jHhnZ9JwHfAjy9RT2Ew"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": []
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}

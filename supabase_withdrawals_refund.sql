@@ -12,6 +12,11 @@ declare
   v_amount numeric;
   v_status text;
 begin
+  -- 0. Security Check
+  if not public.is_admin() then
+    raise exception 'Access denied: Admin only';
+  end if;
+
   -- 1. Get Request Details
   select user_id, amount, status into v_user_id, v_amount, v_status
   from public.withdraw_requests
@@ -50,3 +55,31 @@ begin
   
 end;
 $$;
+
+-- =================================================================
+-- RLS POLICIES FOR WITHDRAWAL REQUESTS
+-- =================================================================
+alter table public.withdraw_requests enable row level security;
+
+-- Drop existing policies to be safe (idempotent)
+drop policy if exists "Users can view own requests" on public.withdraw_requests;
+drop policy if exists "Admins can view all requests" on public.withdraw_requests;
+drop policy if exists "Admins can update requests" on public.withdraw_requests;
+
+-- 1. Users can view own requests
+create policy "Users can view own requests" 
+on public.withdraw_requests 
+for select 
+using (auth.uid() = user_id);
+
+-- 2. Admins can view all requests
+create policy "Admins can view all requests" 
+on public.withdraw_requests 
+for select 
+using (public.is_admin());
+
+-- 3. Admins can update status (Approve/Decline)
+create policy "Admins can update requests" 
+on public.withdraw_requests 
+for update
+using (public.is_admin());

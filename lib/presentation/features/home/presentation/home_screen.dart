@@ -198,7 +198,11 @@ class HomeScreen extends ConsumerWidget {
 
               // Trending Markets List
               trendingMarkets.when(
-                data: (markets) {
+                data: (allMarkets) {
+                  final markets = allMarkets
+                      .where((m) => m.status != 'resolved')
+                      .toList();
+
                   if (markets.isEmpty) {
                     return const Center(child: Text('No markets available'));
                   }

@@ -46,7 +46,7 @@ class MarketDetailScreen extends ConsumerWidget {
               if (market != null) {
                 try {
                   await Share.share(
-                    'Check out this trade on Predixs!\n${market.title}\n\nView Trade: io.supabase.predixs://app/market/${market.id}\n\nDon\'t have the app? Download it to start trading!',
+                    'Check out this trade on Predixs!\n${market.title}\n\nView Trade: https://predixs.app/market/${market.id}\n\nDon\'t have the app? Download it to start trading!',
                   );
                 } catch (e) {
                   if (context.mounted) {
@@ -569,6 +569,27 @@ class _PredictionCard extends StatelessWidget {
                   fontSize: 28,
                 ),
               ),
+              if (price > 0) ...[
+                const Gap(4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Win ${(1 / price).toStringAsFixed(1)}x',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                ),
+              ],
               const Gap(8),
               LinearProgressIndicator(
                 value: price,

@@ -22,7 +22,11 @@ import '../../presentation/features/admin/presentation/create_market_screen.dart
 import '../../presentation/features/admin/presentation/resolve_market_list_screen.dart';
 import '../../presentation/features/admin/presentation/user_management_screen.dart';
 import '../../presentation/features/admin/presentation/admin_withdrawals_screen.dart';
+
 import '../../data/datasources/local_storage_service.dart';
+import '../../presentation/features/wallet/providers/wallet_providers.dart';
+import '../../presentation/features/portfolio/providers/portfolio_providers.dart';
+import '../../presentation/features/notifications/providers/notification_providers.dart';
 
 // Placeholder screens for navigation setup
 class PlaceholderScreen extends StatelessWidget {
@@ -38,22 +42,52 @@ class PlaceholderScreen extends StatelessWidget {
   }
 }
 
-class ScaffoldWithNavBar extends StatelessWidget {
+class ScaffoldWithNavBar extends ConsumerStatefulWidget {
   final StatefulNavigationShell navigationShell;
 
   const ScaffoldWithNavBar({required this.navigationShell, Key? key})
     : super(key: key ?? const ValueKey<String>('ScaffoldWithNavBar'));
 
   @override
+  ConsumerState<ScaffoldWithNavBar> createState() => _ScaffoldWithNavBarState();
+}
+
+class _ScaffoldWithNavBarState extends ConsumerState<ScaffoldWithNavBar>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Refresh Data on App Resume
+      ref.invalidate(walletBalanceProvider);
+      ref.invalidate(portfolioPositionsProvider);
+      ref.invalidate(notificationsProvider);
+      // Optional: Refresh markets if real-time is needed
+      // ref.invalidate(marketListProvider);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
+      body: widget.navigationShell,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
+        selectedIndex: widget.navigationShell.currentIndex,
         onDestinationSelected: (int index) {
-          navigationShell.goBranch(
+          widget.navigationShell.goBranch(
             index,
-            initialLocation: index == navigationShell.currentIndex,
+            initialLocation: index == widget.navigationShell.currentIndex,
           );
         },
         destinations: const [

@@ -121,6 +121,9 @@ class _MarketsScreenState extends ConsumerState<MarketsScreen> {
                   .when(
                     data: (allMarkets) {
                       final markets = allMarkets.where((m) {
+                        // Only show active markets
+                        if (m.status == 'resolved') return false;
+
                         final matchesCategory =
                             selectedCategory == 'All' ||
                             m.category == selectedCategory;

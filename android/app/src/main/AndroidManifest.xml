@@ -35,6 +35,13 @@
                 <data android:scheme="io.supabase.predixs" android:host="market" />
                 <data android:scheme="io.supabase.predixs" android:host="app" />
             </intent-filter>
+            <!-- Standard App Links (HTTPS) for better sharing -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="predixs.app" android:pathPrefix="/market" />
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

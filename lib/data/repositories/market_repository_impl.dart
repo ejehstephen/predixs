@@ -98,7 +98,6 @@ class MarketRepositoryImpl implements MarketRepository {
     return _client
         .from('markets')
         .stream(primaryKey: ['id'])
-        .eq('is_resolved', false)
         .order('volume', ascending: false)
         .map((data) => data.cast<Map<String, dynamic>>());
   }

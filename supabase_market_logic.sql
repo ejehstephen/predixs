@@ -434,6 +434,16 @@ begin
              json_build_object('source', 'market_resolution', 'market_id', p_market_id)
            );
            
+           -- NOTIFICATION: You Won!
+           insert into public.notifications (user_id, title, body, type, metadata)
+           values (
+             v_pos.user_id,
+             'Winning Payout! 🎉',
+             'You won on "' || (select title from public.markets where id = p_market_id) || '"! Your winnings have been added to your wallet.',
+             'success',
+             json_build_object('market_id', p_market_id)
+           );
+           
            v_count := v_count + 1;
         end;
     end if;

@@ -20,12 +20,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    // Mark all as read when screen opens
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await ref.read(userRepositoryProvider).markAllNotificationsRead();
-      // Invalidate to refresh UI (badge should disappear)
-      ref.invalidate(notificationsProvider);
-    });
   }
 
   @override

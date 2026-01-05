@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,11 +9,18 @@ import '../../../../domain/entities/position.dart';
 import '../../market/presentation/widgets/sell_shares_modal.dart';
 import '../providers/portfolio_providers.dart';
 
-class PortfolioScreen extends ConsumerWidget {
+class PortfolioScreen extends ConsumerStatefulWidget {
   const PortfolioScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PortfolioScreen> createState() => _PortfolioScreenState();
+}
+
+class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
+  int _selectedIndex = 0; // 0 = Active, 1 = History
+
+  @override
+  Widget build(BuildContext context) {
     // Watch all necessary providers
     final positionsAsync = ref.watch(portfolioPositionsProvider);
     final totalValueAsync = ref.watch(totalPortfolioValueProvider);
@@ -46,170 +54,105 @@ class PortfolioScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // 1. Net Worth Card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.textPrimary, Color(0xFF2C3E50)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.textPrimary.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Total Net Worth',
-                      style: GoogleFonts.inter(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    totalValueAsync.when(
-                      data: (val) => Text(
-                        '₦${val.toStringAsFixed(2)}',
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ).animate().scale(),
-                      loading: () => const SizedBox(
-                        height: 48,
-                        child: Center(
-                          child: CircularProgressIndicator(color: Colors.white),
-                        ),
-                      ),
-                      error: (e, _) => Text(
-                        'Error',
-                        style: GoogleFonts.outfit(color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // 2. Breakdown Grid
-              Row(
-                children: [
-                  // Cash Card
-                  Expanded(
-                    child: _InfoCard(
-                      label: 'Cash Balance',
-                      value: walletBalanceAsync.when(
-                        data: (v) => '₦${v.toStringAsFixed(2)}',
-                        loading: () => '...',
-                        error: (_, __) => 'Error',
-                      ),
-                      icon: Icons.account_balance_wallet_outlined,
-                      iconColor: Colors.blueAccent,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Asset Card
-                  Expanded(
-                    child: _InfoCard(
-                      label: 'Asset Value',
-                      value: currentValueAsync.when(
-                        data: (v) => '₦${v.toStringAsFixed(2)}',
-                        loading: () => '...',
-                        error: (_, __) => 'Error',
-                      ),
-                      icon: Icons.pie_chart_outline,
-                      iconColor: Colors.purpleAccent,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  // Profit Card
-                  Expanded(
-                    child: _InfoCard(
-                      label: 'Total Profit',
-                      value: totalProfitAsync.when(
-                        data: (v) => '+₦${v.toStringAsFixed(2)}',
-                        loading: () => '...',
-                        error: (_, __) => 'Error',
-                      ),
-                      icon: Icons.trending_up,
-                      iconColor: AppColors.success,
-                      valueColor: AppColors.success,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Loss Card
-                  Expanded(
-                    child: _InfoCard(
-                      label: 'Total Loss',
-                      value: totalLossAsync.when(
-                        data: (v) =>
-                            '₦${v.toStringAsFixed(2)}', // v is naturally negative
-                        loading: () => '...',
-                        error: (_, __) => 'Error',
-                      ),
-                      icon: Icons.trending_down,
-                      iconColor: AppColors.error,
-                      valueColor: AppColors.error,
-                    ),
-                  ),
-                ],
+              // Net Worth & Stats (Keep these visible on Active Tab)
+              _PortfolioSummary(
+                totalValueAsync: totalValueAsync,
+                walletBalanceAsync: walletBalanceAsync,
+                currentValueAsync: currentValueAsync,
+                totalProfitAsync: totalProfitAsync,
+                totalLossAsync: totalLossAsync,
               ),
 
               const SizedBox(height: 32),
 
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Active Positions',
-                  style: GoogleFonts.outfit(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
+              // Custom Header Toggle
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedIndex = 0;
+                      });
+                    },
+                    child: Text(
+                      'Active Positions',
+                      style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: _selectedIndex == 0
+                            ? Theme.of(context).textTheme.bodyLarge?.color
+                            : Colors.grey,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 130),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedIndex = 1;
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 2.0),
+                      child: Text(
+                        'History',
+                        style: GoogleFonts.outfit(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: _selectedIndex == 1
+                              ? Theme.of(context).textTheme.bodyLarge?.color
+                              : Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 16),
 
               positionsAsync.when(
-                data: (positions) {
-                  if (positions.isEmpty) {
-                    return Container(
-                      padding: const EdgeInsets.all(32),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'No active positions',
-                        style: GoogleFonts.inter(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
+                data: (allPositions) {
+                  final activePositions = allPositions
+                      .where((p) => !p.isMarketResolved)
+                      .toList();
+                  final historyPositions =
+                      allPositions.where((p) => p.isMarketResolved).toList()
+                        ..sort(
+                          (a, b) => b.marketEndTime.compareTo(a.marketEndTime),
+                        );
+
+                  final displayList = _selectedIndex == 0
+                      ? activePositions
+                      : historyPositions;
+
+                  if (displayList.isEmpty) {
+                    return _EmptyState(
+                      message: _selectedIndex == 0
+                          ? 'No active positions'
+                          : 'No history yet',
                     );
                   }
+
                   return ListView.separated(
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
-                    itemCount: positions.length,
+                    itemCount: displayList.length,
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 16),
                     itemBuilder: (context, index) {
-                      final pos = positions[index];
-                      return _PositionCard(
-                        position: pos,
-                      ).animate().fadeIn(delay: (100 * index).ms).moveX();
+                      final pos = displayList[index];
+                      // Use different card based on mode
+                      if (_selectedIndex == 0) {
+                        return _PositionCard(
+                          position: pos,
+                        ).animate().fadeIn(delay: (50 * index).ms).moveX();
+                      } else {
+                        return _HistoryItemCard(
+                          position: pos,
+                        ).animate().fadeIn(delay: (50 * index).ms).moveX();
+                      }
                     },
                   );
                 },
@@ -218,9 +161,274 @@ class PortfolioScreen extends ConsumerWidget {
               ),
             ],
           ),
-        ), // SingleChildScrollView
-      ), // RefreshIndicator
-    ); // Scaffold
+        ),
+      ),
+    );
+  }
+}
+
+class _PortfolioSummary extends StatelessWidget {
+  final AsyncValue<double> totalValueAsync;
+  final AsyncValue<double> walletBalanceAsync;
+  final AsyncValue<double> currentValueAsync;
+  final AsyncValue<double> totalProfitAsync;
+  final AsyncValue<double> totalLossAsync;
+
+  const _PortfolioSummary({
+    required this.totalValueAsync,
+    required this.walletBalanceAsync,
+    required this.currentValueAsync,
+    required this.totalProfitAsync,
+    required this.totalLossAsync,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Net Worth Card
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppColors.textPrimary, Color(0xFF2C3E50)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.textPrimary.withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Total Net Worth',
+                style: GoogleFonts.inter(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              totalValueAsync.when(
+                data: (val) => Text(
+                  '₦${val.toStringAsFixed(2)}',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ).animate().scale(),
+                loading: () => const SizedBox(
+                  height: 48,
+                  child: Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
+                ),
+                error: (e, _) => Text(
+                  'Error',
+                  style: GoogleFonts.outfit(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Breakdown Grid
+        Row(
+          children: [
+            Expanded(
+              child: _InfoCard(
+                label: 'Cash Balance',
+                value: walletBalanceAsync.when(
+                  data: (v) => '₦${v.toStringAsFixed(2)}',
+                  loading: () => '...',
+                  error: (_, __) => 'Error',
+                ),
+                icon: Icons.account_balance_wallet_outlined,
+                iconColor: Colors.blueAccent,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _InfoCard(
+                label: 'Asset Value',
+                value: currentValueAsync.when(
+                  data: (v) => '₦${v.toStringAsFixed(2)}',
+                  loading: () => '...',
+                  error: (_, __) => 'Error',
+                ),
+                icon: Icons.pie_chart_outline,
+                iconColor: Colors.purpleAccent,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _InfoCard(
+                label: 'Total Profit',
+                value: totalProfitAsync.when(
+                  data: (v) => '+₦${v.toStringAsFixed(2)}',
+                  loading: () => '...',
+                  error: (_, __) => 'Error',
+                ),
+                icon: Icons.trending_up,
+                iconColor: AppColors.success,
+                valueColor: AppColors.success,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _InfoCard(
+                label: 'Total Loss',
+                value: totalLossAsync.when(
+                  data: (v) => '₦${v.toStringAsFixed(2)}',
+                  loading: () => '...',
+                  error: (_, __) => 'Error',
+                ),
+                icon: Icons.trending_down,
+                iconColor: AppColors.error,
+                valueColor: AppColors.error,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final String message;
+  const _EmptyState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      alignment: Alignment.center,
+      child: Column(
+        children: [
+          Icon(Icons.history, size: 48, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: GoogleFonts.inter(color: AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HistoryItemCard extends StatelessWidget {
+  final Position position;
+  const _HistoryItemCard({required this.position});
+
+  @override
+  Widget build(BuildContext context) {
+    // Determine user outcome
+    // We assume 'resolution' property exists on market, but Position entity might need mapping.
+    // If not, we infer from PnL. If PnL > 0 (Winner), PnL < 0 (Loser).
+    // Actually, resolved markets set value to 0 or 100 via logic update.
+    final isWinner = position.pnl >= 0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10),
+        ],
+        border: Border.all(
+          color: isWinner
+              ? AppColors.success.withOpacity(0.3)
+              : AppColors.error.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Date & Badge Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                DateFormat('MMM d, yyyy').format(position.marketEndTime),
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (isWinner ? AppColors.success : AppColors.error)
+                      .withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  isWinner ? "WON" : "LOST",
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: isWinner ? AppColors.success : AppColors.error,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Title
+          Text(
+            position.marketTitle,
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text(
+                "You Picked: ",
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              Text(
+                position.side.toUpperCase(),
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                isWinner
+                    ? "+₦${position.pnl.toStringAsFixed(2)}"
+                    : "-₦${position.value.toStringAsFixed(2)} Loss", // Or display actual PnL
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isWinner ? AppColors.success : AppColors.error,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 

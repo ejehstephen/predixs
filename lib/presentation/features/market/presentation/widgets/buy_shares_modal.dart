@@ -111,9 +111,9 @@ class _BuySharesModalState extends ConsumerState<BuySharesModal> {
       padding: const EdgeInsets.all(
         24,
       ).copyWith(bottom: MediaQuery.of(context).viewInsets.bottom + 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -127,7 +127,7 @@ class _BuySharesModalState extends ConsumerState<BuySharesModal> {
                 style: GoogleFonts.outfit(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
               IconButton(
@@ -152,7 +152,7 @@ class _BuySharesModalState extends ConsumerState<BuySharesModal> {
             'Current Price: ₦${price.toStringAsFixed(2)}',
             style: GoogleFonts.inter(
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
           const Gap(16),
@@ -162,18 +162,22 @@ class _BuySharesModalState extends ConsumerState<BuySharesModal> {
             style: GoogleFonts.outfit(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
             decoration: InputDecoration(
               prefixText: '₦ ',
               hintText: '0.00',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: Colors.grey.shade200),
+                borderSide: BorderSide(
+                  color: Theme.of(context).dividerColor.withOpacity(0.2),
+                ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: Colors.grey.shade200),
+                borderSide: BorderSide(
+                  color: Theme.of(context).dividerColor.withOpacity(0.2),
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -186,7 +190,7 @@ class _BuySharesModalState extends ConsumerState<BuySharesModal> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.background,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -201,7 +205,7 @@ class _BuySharesModalState extends ConsumerState<BuySharesModal> {
                   style: GoogleFonts.robotoMono(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
               ],

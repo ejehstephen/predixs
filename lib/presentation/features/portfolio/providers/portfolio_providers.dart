@@ -85,7 +85,9 @@ final portfolioInvestedProvider = Provider.autoDispose<AsyncValue<double>>((
 ) {
   final positions = ref.watch(portfolioPositionsProvider);
   return positions.whenData(
-    (list) => list.fold(0.0, (sum, p) => sum + p.invested),
+    (list) => list
+        .where((p) => !p.isMarketResolved)
+        .fold(0.0, (sum, p) => sum + p.invested),
   );
 });
 
@@ -94,7 +96,9 @@ final portfolioCurrentValueProvider = Provider.autoDispose<AsyncValue<double>>((
 ) {
   final positions = ref.watch(portfolioPositionsProvider);
   return positions.whenData(
-    (list) => list.fold(0.0, (sum, p) => sum + p.value),
+    (list) => list
+        .where((p) => !p.isMarketResolved)
+        .fold(0.0, (sum, p) => sum + p.value),
   );
 });
 
@@ -119,7 +123,9 @@ final portfolioTotalProfitProvider = Provider.autoDispose<AsyncValue<double>>((
 ) {
   final positions = ref.watch(portfolioPositionsProvider);
   return positions.whenData(
-    (list) => list.fold(0.0, (sum, p) => sum + (p.pnl > 0 ? p.pnl : 0)),
+    (list) => list
+        .where((p) => !p.isMarketResolved)
+        .fold(0.0, (sum, p) => sum + (p.pnl > 0 ? p.pnl : 0)),
   );
 });
 
@@ -128,6 +134,8 @@ final portfolioTotalLossProvider = Provider.autoDispose<AsyncValue<double>>((
 ) {
   final positions = ref.watch(portfolioPositionsProvider);
   return positions.whenData(
-    (list) => list.fold(0.0, (sum, p) => sum + (p.pnl < 0 ? p.pnl : 0)),
+    (list) => list
+        .where((p) => !p.isMarketResolved)
+        .fold(0.0, (sum, p) => sum + (p.pnl < 0 ? p.pnl : 0)),
   );
 });

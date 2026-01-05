@@ -139,12 +139,16 @@ class _PriceBar extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      label,
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                    ),
+                  ],
                 ),
                 Text(
                   '${(price * 100).toStringAsFixed(0)}%',
